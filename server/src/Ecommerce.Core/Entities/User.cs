@@ -10,7 +10,7 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Relaciones
+
     public ICollection<Cart> Carts { get; set; } = new List<Cart>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 }

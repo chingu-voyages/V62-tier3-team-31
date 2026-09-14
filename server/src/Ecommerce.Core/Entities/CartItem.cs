@@ -9,7 +9,6 @@ public class CartItem
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Relaciones
     public Cart Cart { get; set; } = null!;
     public Product Product { get; set; } = null!;
 }
