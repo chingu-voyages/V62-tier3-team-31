@@ -1,9 +1,12 @@
-using Ecommerce.Application.DTOs.Auth;
+using Ecommerce.Application.DTOs;
 
-namespace Ecommerce.Application;
+namespace Ecommerce.Application.Common.Interfaces;
 
 public interface IAuthService
 {
-    Task<(bool Success, string ErrorMessage, AuthResponse? Response)> RegisterAsync(RegisterRequest request);
-    Task<(bool Success, string ErrorMessage, AuthResponse? Response)> LoginAsync(LoginRequest request);
+    Task<(UserDto User, string AccessToken, string RefreshToken)> RegisterAsync(RegisterRequestDto request);
+    Task<(UserDto User, string AccessToken, string RefreshToken)> LoginAsync(LoginRequestDto request);
+
+    Task<UserDto?> GetUserByIdAsync(Guid userId);
+      Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(string refreshToken);
 }
