@@ -16,7 +16,7 @@ namespace Ecommerce.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "fulfillment_status", new[] { "unfulfilled", "processing", "shipped", "delivered", "cancelled" });
@@ -144,7 +144,26 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.Property<decimal>("RefundedAmount")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("ShippingAddress")
+                    b.Property<string>("ShippingAddressLine1")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingAddressLine2")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingCity")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingCountry")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingPostalCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingState")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -305,6 +324,9 @@ namespace Ecommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
@@ -312,7 +334,8 @@ namespace Ecommerce.Infrastructure.Migrations
                 {
                     b.HasOne("Ecommerce.Core.Entities.User", "User")
                         .WithMany("Carts")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("User");
                 });
@@ -322,13 +345,13 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasOne("Ecommerce.Core.Entities.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Ecommerce.Core.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Cart");
@@ -341,7 +364,7 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasOne("Ecommerce.Core.Entities.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -352,13 +375,13 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasOne("Ecommerce.Core.Entities.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Ecommerce.Core.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -369,9 +392,9 @@ namespace Ecommerce.Infrastructure.Migrations
             modelBuilder.Entity("Ecommerce.Core.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("Ecommerce.Core.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("PasswordResetTokens")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -382,7 +405,7 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasOne("Ecommerce.Core.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -408,6 +431,8 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.Navigation("Carts");
 
                     b.Navigation("Orders");
+
+                    b.Navigation("PasswordResetTokens");
                 });
 #pragma warning restore 612, 618
         }

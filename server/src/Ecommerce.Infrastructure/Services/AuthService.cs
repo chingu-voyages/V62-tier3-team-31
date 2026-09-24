@@ -83,7 +83,7 @@ public class AuthService : IAuthService
             GenerateToken(user.Id, isRefreshToken: true));
     }
 
-    public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(string refreshToken)
+    public async Task<string> RefreshTokenAsync(string refreshToken)
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
             throw new UnauthorizedAccessException("Please log in again");
@@ -123,9 +123,7 @@ public class AuthService : IAuthService
             if (user is null)
                 throw new UnauthorizedAccessException("Please log in again");
 
-            return (
-                GenerateToken(user.Id, isRefreshToken: false),
-                GenerateToken(user.Id, isRefreshToken: true));
+            return GenerateToken(user.Id, isRefreshToken: false);
         }
         catch (SecurityTokenException)
         {

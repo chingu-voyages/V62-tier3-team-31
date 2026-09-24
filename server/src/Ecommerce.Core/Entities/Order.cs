@@ -4,11 +4,16 @@ public class Order
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
-    public OrderStatus Status { get; set; } = OrderStatus.Pending; 
-    public FulfillmentStatus FulfillmentStatus { get; set; } = FulfillmentStatus.Unfulfilled; 
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
+    public FulfillmentStatus FulfillmentStatus { get; set; } = FulfillmentStatus.Unfulfilled;
     public decimal TotalAmount { get; set; }
-    public string ShippingAddress { get; set; } = string.Empty;
-    public string? StripeSessionId { get; set; } 
+    public string ShippingAddressLine1 { get; set; } = string.Empty;
+    public string? ShippingAddressLine2 { get; set; }
+    public string ShippingCity { get; set; } = string.Empty;
+    public string ShippingState { get; set; } = string.Empty;
+    public string ShippingPostalCode { get; set; } = string.Empty;
+    public string ShippingCountry { get; set; } = string.Empty;
+    public string? StripeSessionId { get; set; }
     public string? StripePaymentIntentId { get; set; }
     public decimal RefundedAmount { get; set; } = 0;
     public string? FailureReason { get; set; }

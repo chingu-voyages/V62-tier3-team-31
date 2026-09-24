@@ -38,8 +38,8 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Refresh()
     {
         var refreshToken = Request.Cookies[AuthCookieNames.RefreshToken];
-        var result = await _authService.RefreshTokenAsync(refreshToken ?? string.Empty);
-        SetAuthCookies(result.AccessToken, result.RefreshToken);
+        var accessToken = await _authService.RefreshTokenAsync(refreshToken ?? string.Empty);
+        Response.Cookies.Append(AuthCookieNames.AccessToken, accessToken, CreateCookieOptions("/", TimeSpan.FromMinutes(15)));
         return NoContent();
     }
 
