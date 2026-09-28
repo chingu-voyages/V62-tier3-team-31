@@ -24,6 +24,10 @@ public sealed class GlobalExceptionMiddleware
         {
             await WriteAsync(context, StatusCodes.Status409Conflict, "Email is already registered", errors: null);
         }
+        catch (ProductNotFoundException ex)
+        {
+            await WriteAsync(context, StatusCodes.Status404NotFound, ex.Message, errors: null);
+        }
         catch (InvalidRequestException ex)
         {
             await WriteAsync(context, StatusCodes.Status400BadRequest, ex.Message, ex.Errors);
@@ -35,7 +39,10 @@ public sealed class GlobalExceptionMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception for {Method} {Path}", context.Request.Method, context.Request.Path);
-            await WriteAsync(context, StatusCodes.Status500InternalServerError, "An unexpected error occurred", errors: null);
+            var detail = context.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment()
+                ? ex.ToString()
+                : null;
+            await WriteAsync(context, StatusCodes.Status500InternalServerError, "Something went wrong", errors: null, detail);
         }
     }
 
@@ -43,7 +50,8 @@ public sealed class GlobalExceptionMiddleware
         HttpContext context,
         int status,
         string title,
-        Dictionary<string, string[]>? errors)
+        Dictionary<string, string[]>? errors,
+        string? detail = null)
     {
         if (context.Response.HasStarted)
         {
@@ -53,9 +61,11 @@ public sealed class GlobalExceptionMiddleware
         context.Response.StatusCode = status;
         context.Response.ContentType = "application/json";
 
-        object body = errors is null
-            ? new { title, status }
-            : new { title, status, errors };
+        object body = errors is not null
+            ? new { title, status, errors }
+            : detail is not null
+                ? new { title, status, detail }
+                : new { title, status };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(body));
     }
