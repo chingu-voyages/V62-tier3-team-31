@@ -65,12 +65,12 @@ export function CartDrawer({
                 <div className="cart-thumb-shape" />
               </div>
               <div className="cart-item-info">
-                <h3>{product.name}</h3>
-                <p>{product.spec}</p>
+                <h3>{product.title}</h3>
+                <p>{product.description}</p>
                 <div className="qty" aria-label="Quantity controls">
                   <button
                     type="button"
-                    aria-label={`Decrease ${product.name} quantity`}
+                    aria-label={`Decrease ${product.title} quantity`}
                     onClick={() => onChangeQuantity(product.id, -1)}
                   >
                     −
@@ -78,7 +78,7 @@ export function CartDrawer({
                   <span>{quantity}</span>
                   <button
                     type="button"
-                    aria-label={`Increase ${product.name} quantity`}
+                    aria-label={`Increase ${product.title} quantity`}
                     onClick={() => onChangeQuantity(product.id, 1)}
                   >
                     +

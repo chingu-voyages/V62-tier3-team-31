@@ -1,9 +1,17 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import { CartDrawer, type CartQuantities } from '../components/CartDrawer'
 import { DeviceArt } from '../components/DeviceArt'
-import { money, products, type Product } from '../data/products'
+import {
+  catalogCategories,
+  getStockLabel,
+  hasLimitedStock,
+  heroProductId,
+  money,
+  products,
+  type Product,
+} from '../data/products'
 
-type Category = Product['category']
+type CategorySlug = Product['category']['slug']
 
 type ProductCardProps = {
   product: Product
@@ -11,8 +19,7 @@ type ProductCardProps = {
 }
 
 function ProductCard({ product, onAddToCart }: ProductCardProps) {
-  const roundedRating = Math.round(product.rating)
-  const ratingStars = `${'★'.repeat(roundedRating)}${'☆'.repeat(5 - roundedRating)}`
+  const stockLabel = getStockLabel(product.stockQuantity)
 
   return (
     <article className="product-card">
@@ -20,18 +27,12 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         <DeviceArt visual={product.visual} />
       </div>
       <div className="product-body">
-        <h3 className="product-name">{product.name}</h3>
-        <p className="product-spec">{product.spec}</p>
-        <div className="rating-row" aria-label={`${product.rating} out of 5 stars`}>
-          <span aria-hidden="true">{ratingStars}</span>
-          <small>
-            {product.rating} ({product.reviews})
-          </small>
-        </div>
+        <h3 className="product-name">{product.title}</h3>
+        <p className="product-spec">{product.description}</p>
         <div className="product-price-row">
           <span className="product-price">{money.format(product.price)}</span>
-          <span className={`stock${product.stock.includes('Limited') ? ' limited' : ''}`}>
-            {product.stock}
+          <span className={`stock${hasLimitedStock(product.stockQuantity) ? ' limited' : ''}`}>
+            {stockLabel}
           </span>
         </div>
         <button className="btn btn-primary" type="button" onClick={() => onAddToCart(product.id)}>
@@ -81,7 +82,7 @@ function HeroPhoneArtwork() {
 }
 
 export function StorefrontPage() {
-  const [activeCategory, setActiveCategory] = useState<Category | null>(null)
+  const [activeCategory, setActiveCategory] = useState<CategorySlug | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [cartQuantities, setCartQuantities] = useState<CartQuantities>({})
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -94,10 +95,10 @@ export function StorefrontPage() {
     const normalizedSearch = searchTerm.trim().toLowerCase()
 
     return products.filter((product) => {
-      const categoryMatches = !activeCategory || product.category === activeCategory
+      const categoryMatches = !activeCategory || product.category.slug === activeCategory
       const searchMatches =
         !normalizedSearch ||
-        [product.name, product.category, product.spec]
+        [product.title, product.category.name, product.category.slug, product.description]
           .join(' ')
           .toLowerCase()
           .includes(normalizedSearch)
@@ -106,7 +107,7 @@ export function StorefrontPage() {
     })
   }, [activeCategory, searchTerm])
 
-  const cartCount = Object.values(cartQuantities).reduce(
+  const cartCount = Object.values(cartQuantities).reduce<number>(
     (total, quantity) => total + (quantity ?? 0),
     0,
   )
@@ -139,7 +140,7 @@ export function StorefrontPage() {
     document.getElementById('featured')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const applyCategoryFilter = (category: Category) => {
+  const applyCategoryFilter = (category: CategorySlug) => {
     setActiveCategory(category)
     setSearchTerm('')
     scrollToFeatured()
@@ -225,8 +226,12 @@ export function StorefrontPage() {
     )
   }
 
+  const activeCategoryLabel = activeCategory
+    ? catalogCategories.find((category) => category.slug === activeCategory)?.name
+    : null
+
   const filterLabels = [
-    activeCategory,
+    activeCategoryLabel,
     searchTerm.trim() ? `“${searchTerm.trim()}”` : null,
   ].filter((label): label is string => Boolean(label))
 
@@ -243,9 +248,9 @@ export function StorefrontPage() {
 
           <nav className="desktop-nav" aria-label="Primary navigation">
             <a href="#featured">Shop</a>
-            <a href="#categories" data-category-link="Smartphones">Phones</a>
-            <a href="#categories" data-category-link="Laptops">Laptops</a>
-            <a href="#categories" data-category-link="Audio">Audio</a>
+            <a href="#categories" onClick={() => applyCategoryFilter('smartphones')}>Phones</a>
+            <a href="#categories" onClick={() => applyCategoryFilter('laptops')}>Laptops</a>
+            <a href="#categories" onClick={() => applyCategoryFilter('audio')}>Audio</a>
             <a href="#promo">Deals</a>
           </nav>
 
@@ -298,9 +303,33 @@ export function StorefrontPage() {
 
         <nav className={`mobile-nav${isMobileNavOpen ? ' open' : ''}`} aria-label="Mobile navigation">
           <a href="#featured" onClick={() => setIsMobileNavOpen(false)}>Shop</a>
-          <a href="#categories" onClick={() => setIsMobileNavOpen(false)}>Phones</a>
-          <a href="#categories" onClick={() => setIsMobileNavOpen(false)}>Laptops</a>
-          <a href="#categories" onClick={() => setIsMobileNavOpen(false)}>Audio</a>
+          <a
+            href="#categories"
+            onClick={() => {
+              applyCategoryFilter('smartphones')
+              setIsMobileNavOpen(false)
+            }}
+          >
+            Phones
+          </a>
+          <a
+            href="#categories"
+            onClick={() => {
+              applyCategoryFilter('laptops')
+              setIsMobileNavOpen(false)
+            }}
+          >
+            Laptops
+          </a>
+          <a
+            href="#categories"
+            onClick={() => {
+              applyCategoryFilter('audio')
+              setIsMobileNavOpen(false)
+            }}
+          >
+            Audio
+          </a>
           <a href="#promo" onClick={() => setIsMobileNavOpen(false)}>Deals</a>
         </nav>
       </header>
@@ -328,7 +357,7 @@ export function StorefrontPage() {
                   <span className="hero-price-label">From</span>
                   <strong className="hero-price">R18,999</strong>
                 </div>
-                <button className="btn btn-primary" type="button" onClick={() => addToCart('phone')}>
+                <button className="btn btn-primary" type="button" onClick={() => addToCart(heroProductId)}>
                   Shop now
                 </button>
               </div>
@@ -372,7 +401,7 @@ export function StorefrontPage() {
               <button
                 className="category-card category-smartphones"
                 type="button"
-                onClick={() => applyCategoryFilter('Smartphones')}
+                onClick={() => applyCategoryFilter('smartphones')}
               >
                 <div className="category-copy">
                   <span>01</span>
@@ -389,7 +418,7 @@ export function StorefrontPage() {
               <button
                 className="category-card category-laptops"
                 type="button"
-                onClick={() => applyCategoryFilter('Laptops')}
+                onClick={() => applyCategoryFilter('laptops')}
               >
                 <div className="category-copy">
                   <span>02</span>
@@ -406,7 +435,7 @@ export function StorefrontPage() {
               <button
                 className="category-card category-audio"
                 type="button"
-                onClick={() => applyCategoryFilter('Audio')}
+                onClick={() => applyCategoryFilter('audio')}
               >
                 <div className="category-copy">
                   <span>03</span>
@@ -470,7 +499,7 @@ export function StorefrontPage() {
                   href="#featured"
                   onClick={(event) => {
                     event.preventDefault()
-                    applyCategoryFilter('Laptops')
+                    applyCategoryFilter('laptops')
                   }}
                 >
                   Explore the deal
