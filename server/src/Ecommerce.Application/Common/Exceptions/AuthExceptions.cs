@@ -10,8 +10,13 @@ public sealed class InvalidRequestException : Exception
     public Dictionary<string, string[]> Errors { get; }
 
     public InvalidRequestException(Dictionary<string, string[]> errors)
-        : base("Validation failed")
+        : base("One or more validation errors occurred.")
     {
         Errors = errors;
     }
+}
+
+public sealed class ProductNotFoundException : Exception
+{
+    public ProductNotFoundException() : base("Product not found") { }
 }
