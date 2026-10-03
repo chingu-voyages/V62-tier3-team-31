@@ -12,16 +12,19 @@ namespace Ecommerce.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly ICartService _cartService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, ICartService cartService)
     {
         _authService = authService;
+        _cartService = cartService;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
         var result = await _authService.RegisterAsync(request);
+        await MergeCartAsync(result.User.Id);
         SetAuthCookies(result.AccessToken, result.RefreshToken);
         return StatusCode(StatusCodes.Status201Created, new { user = result.User });
     }
@@ -30,6 +33,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
         var result = await _authService.LoginAsync(request);
+        await MergeCartAsync(result.User.Id);
         SetAuthCookies(result.AccessToken, result.RefreshToken);
         return Ok(new { user = result.User });
     }
@@ -71,6 +75,13 @@ public class AuthController : ControllerBase
     {
         Response.Cookies.Append(AuthCookieNames.AccessToken, accessToken, CreateCookieOptions("/", TimeSpan.FromMinutes(15)));
         Response.Cookies.Append(AuthCookieNames.RefreshToken, refreshToken, CreateCookieOptions("/api/v1/auth/refresh", TimeSpan.FromDays(7)));
+    }
+
+    private async Task MergeCartAsync(Guid userId)
+    {
+        var sessionId = Request.Cookies[CartCookieNames.Session];
+        await _cartService.MergeGuestCartAsync(userId, sessionId);
+        Response.Cookies.Delete(CartCookieNames.Session, DeleteCookieOptions("/"));
     }
 
     private static CookieOptions CreateCookieOptions(string path, TimeSpan lifetime) => new()

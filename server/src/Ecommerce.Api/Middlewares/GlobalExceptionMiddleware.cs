@@ -24,9 +24,13 @@ public sealed class GlobalExceptionMiddleware
         {
             await WriteAsync(context, StatusCodes.Status409Conflict, "Email is already registered", errors: null);
         }
-        catch (ProductNotFoundException ex)
+        catch (CartNotFoundException ex)
         {
             await WriteAsync(context, StatusCodes.Status404NotFound, ex.Message, errors: null);
+        }
+        catch (CartConflictException ex)
+        {
+            await WriteAsync(context, StatusCodes.Status409Conflict, ex.Message, errors: null);
         }
         catch (InvalidRequestException ex)
         {
