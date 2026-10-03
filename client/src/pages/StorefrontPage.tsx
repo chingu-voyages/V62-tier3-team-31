@@ -13,6 +13,14 @@ import {
 
 type CategorySlug = Product['category']['slug']
 
+const categoryDescriptions: Record<CategorySlug, string> = {
+  electronics: 'Devices and accessories for work, play and everyday life.',
+  books: 'Stories, ideas and practical guides for every kind of reader.',
+  kitchen: 'Useful essentials for preparing, serving and sharing meals.',
+  stationery: 'Pens, paper and desk tools to keep ideas moving.',
+  toys: 'Playful picks made for curious minds and big imaginations.',
+}
+
 type ProductCardProps = {
   product: Product
   onAddToCart: (id: Product['id']) => void
@@ -237,7 +245,7 @@ export function StorefrontPage() {
 
   return (
     <>
-      <div className="announcement">Free delivery on orders over R750</div>
+      <div className="announcement">Free delivery on orders over $50</div>
 
       <header className="site-header">
         <div className="header-inner container">
@@ -248,9 +256,7 @@ export function StorefrontPage() {
 
           <nav className="desktop-nav" aria-label="Primary navigation">
             <a href="#featured">Shop</a>
-            <a href="#categories" onClick={() => applyCategoryFilter('smartphones')}>Phones</a>
-            <a href="#categories" onClick={() => applyCategoryFilter('laptops')}>Laptops</a>
-            <a href="#categories" onClick={() => applyCategoryFilter('audio')}>Audio</a>
+            <a href="#categories">Categories</a>
             <a href="#promo">Deals</a>
           </nav>
 
@@ -303,33 +309,7 @@ export function StorefrontPage() {
 
         <nav className={`mobile-nav${isMobileNavOpen ? ' open' : ''}`} aria-label="Mobile navigation">
           <a href="#featured" onClick={() => setIsMobileNavOpen(false)}>Shop</a>
-          <a
-            href="#categories"
-            onClick={() => {
-              applyCategoryFilter('smartphones')
-              setIsMobileNavOpen(false)
-            }}
-          >
-            Phones
-          </a>
-          <a
-            href="#categories"
-            onClick={() => {
-              applyCategoryFilter('laptops')
-              setIsMobileNavOpen(false)
-            }}
-          >
-            Laptops
-          </a>
-          <a
-            href="#categories"
-            onClick={() => {
-              applyCategoryFilter('audio')
-              setIsMobileNavOpen(false)
-            }}
-          >
-            Audio
-          </a>
+          <a href="#categories" onClick={() => setIsMobileNavOpen(false)}>Categories</a>
           <a href="#promo" onClick={() => setIsMobileNavOpen(false)}>Deals</a>
         </nav>
       </header>
@@ -355,7 +335,7 @@ export function StorefrontPage() {
               <div className="hero-buy">
                 <div>
                   <span className="hero-price-label">From</span>
-                  <strong className="hero-price">R18,999</strong>
+                  <strong className="hero-price">$999</strong>
                 </div>
                 <button className="btn btn-primary" type="button" onClick={() => addToCart(heroProductId)}>
                   Shop now
@@ -390,7 +370,7 @@ export function StorefrontPage() {
             <div className="section-heading">
               <div>
                 <p className="section-kicker">Shop by category</p>
-                <h2>Technology for every day.</h2>
+                <h2>Everyday essentials, chosen for you.</h2>
               </div>
               <a className="text-link" href="#featured">
                 View all products <span>→</span>
@@ -398,57 +378,24 @@ export function StorefrontPage() {
             </div>
 
             <div className="category-grid">
-              <button
-                className="category-card category-smartphones"
-                type="button"
-                onClick={() => applyCategoryFilter('smartphones')}
-              >
-                <div className="category-copy">
-                  <span>01</span>
-                  <h3>Smartphones</h3>
-                  <p>Flagship cameras, fast displays and reliable all-day power.</p>
-                  <strong>Shop smartphones →</strong>
-                </div>
-                <div className="category-art category-phone-art" aria-hidden="true">
-                  <div className="mini-phone mini-phone-a" />
-                  <div className="mini-phone mini-phone-b" />
-                </div>
-              </button>
-
-              <button
-                className="category-card category-laptops"
-                type="button"
-                onClick={() => applyCategoryFilter('laptops')}
-              >
-                <div className="category-copy">
-                  <span>02</span>
-                  <h3>Laptops</h3>
-                  <p>Portable productivity with premium displays and serious performance.</p>
-                  <strong>Shop laptops →</strong>
-                </div>
-                <div className="category-art category-laptop-art" aria-hidden="true">
-                  <div className="mini-laptop-screen" />
-                  <div className="mini-laptop-base" />
-                </div>
-              </button>
-
-              <button
-                className="category-card category-audio"
-                type="button"
-                onClick={() => applyCategoryFilter('audio')}
-              >
-                <div className="category-copy">
-                  <span>03</span>
-                  <h3>Audio</h3>
-                  <p>Immersive sound, clean design and wireless freedom.</p>
-                  <strong>Shop audio →</strong>
-                </div>
-                <div className="category-art category-headphone-art" aria-hidden="true">
-                  <div className="headphone-band" />
-                  <div className="headphone-cup cup-left" />
-                  <div className="headphone-cup cup-right" />
-                </div>
-              </button>
+              {catalogCategories.map((category, index) => (
+                <button
+                  key={category.id}
+                  className={`category-card category-${category.slug}`}
+                  type="button"
+                  onClick={() => applyCategoryFilter(category.slug)}
+                >
+                  <div className="category-copy">
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <h3>{category.name}</h3>
+                    <p>{categoryDescriptions[category.slug]}</p>
+                    <strong>Shop {category.name.toLowerCase()} →</strong>
+                  </div>
+                  <div className="category-art" aria-hidden="true">
+                    <span>{category.name.slice(0, 1)}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </section>
@@ -461,7 +408,7 @@ export function StorefrontPage() {
                 <h2>Built to perform.</h2>
               </div>
               <div className="product-filter-status" aria-live="polite">
-                {filterLabels.length ? `Showing: ${filterLabels.join(' · ')}` : '4 featured products'}
+                {filterLabels.length ? `Showing: ${filterLabels.join(' · ')}` : `${products.length} featured products`}
               </div>
             </div>
 
@@ -492,14 +439,14 @@ export function StorefrontPage() {
                   with Nexora.
                 </h2>
                 <p>
-                  Save on selected laptops built for lectures, creative work and everything after class.
+                  Save on selected electronics built for lectures, creative work and everything after class.
                 </p>
                 <a
                   className="btn btn-light"
                   href="#featured"
                   onClick={(event) => {
                     event.preventDefault()
-                    applyCategoryFilter('laptops')
+                    applyCategoryFilter('electronics')
                   }}
                 >
                   Explore the deal
@@ -559,14 +506,23 @@ export function StorefrontPage() {
               <span className="brand-mark" aria-hidden="true" />
               <span>Nexora</span>
             </a>
-            <p>Premium consumer electronics with clear pricing, practical support and secure checkout.</p>
+            <p>Practical goods with clear pricing, helpful support and secure checkout.</p>
           </div>
 
           <div>
             <h3>Shop</h3>
-            <a href="#categories">Smartphones</a>
-            <a href="#categories">Laptops</a>
-            <a href="#categories">Audio</a>
+            {catalogCategories.map((category) => (
+              <a
+                key={category.id}
+                href="#featured"
+                onClick={(event) => {
+                  event.preventDefault()
+                  applyCategoryFilter(category.slug)
+                }}
+              >
+                {category.name}
+              </a>
+            ))}
             <a href="#promo">Deals</a>
           </div>
 
