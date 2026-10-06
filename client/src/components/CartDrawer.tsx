@@ -1,6 +1,5 @@
 import { money, productById, type Product } from '../data/products'
-
-export type CartQuantities = Partial<Record<Product['id'], number>>
+import type { CartQuantities } from '../types/cart'
 
 type CartDrawerProps = {
   isOpen: boolean

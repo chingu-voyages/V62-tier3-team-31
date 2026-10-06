@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
-import { CartDrawer, type CartQuantities } from '../components/CartDrawer'
+import { useEffect, useState } from 'react'
+import { CartDrawer } from '../components/CartDrawer'
 import { DeviceArt } from '../components/DeviceArt'
 import {
-  catalogCategories,
   getStockLabel,
   hasLimitedStock,
   heroProductId,
@@ -10,8 +9,10 @@ import {
   products,
   type Product,
 } from '../data/products'
-
-type CategorySlug = Product['category']['slug']
+import { useCart } from '../hooks/useCart'
+import { useCheckout } from '../hooks/useCheckout'
+import { useNewsletterForm } from '../hooks/useNewsletterForm'
+import { useProductFilters, type CategorySlug } from '../hooks/useProductFilters'
 
 type ProductCardProps = {
   product: Product
@@ -82,35 +83,33 @@ function HeroPhoneArtwork() {
 }
 
 export function StorefrontPage() {
-  const [activeCategory, setActiveCategory] = useState<CategorySlug | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [cartQuantities, setCartQuantities] = useState<CartQuantities>({})
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
-  const [newsletterMessage, setNewsletterMessage] = useState('')
-  const [newsletterSucceeded, setNewsletterSucceeded] = useState(false)
-  const [checkoutMessage, setCheckoutMessage] = useState('')
-
-  const displayedProducts = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase()
-
-    return products.filter((product) => {
-      const categoryMatches = !activeCategory || product.category.slug === activeCategory
-      const searchMatches =
-        !normalizedSearch ||
-        [product.title, product.category.name, product.category.slug, product.description]
-          .join(' ')
-          .toLowerCase()
-          .includes(normalizedSearch)
-
-      return categoryMatches && searchMatches
-    })
-  }, [activeCategory, searchTerm])
-
-  const cartCount = Object.values(cartQuantities).reduce<number>(
-    (total, quantity) => total + (quantity ?? 0),
-    0,
-  )
+  const {
+    cartQuantities,
+    cartCount,
+    addToCart,
+    changeQuantity,
+    removeFromCart,
+  } = useCart()
+  const {
+    checkoutMessage,
+    handleCheckout,
+    resetCheckoutMessage,
+  } = useCheckout(cartCount)
+  const {
+    newsletterMessage,
+    newsletterSucceeded,
+    handleNewsletterSubmit,
+  } = useNewsletterForm()
+  const {
+    searchTerm,
+    displayedProducts,
+    filterLabels,
+    applyCategoryFilter,
+    clearFilters,
+    handleSearch,
+  } = useProductFilters(products)
 
   useEffect(() => {
     if (!isCartOpen) {
@@ -140,100 +139,26 @@ export function StorefrontPage() {
     document.getElementById('featured')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const applyCategoryFilter = (category: CategorySlug) => {
-    setActiveCategory(category)
-    setSearchTerm('')
+  const selectCategory = (category: CategorySlug) => {
+    applyCategoryFilter(category)
     scrollToFeatured()
   }
 
-  const clearFilters = () => {
-    setActiveCategory(null)
-    setSearchTerm('')
-  }
-
-  const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value)
-    setActiveCategory(null)
-  }
-
-  const addToCart = (id: Product['id']) => {
-    setCartQuantities((current) => ({
-      ...current,
-      [id]: (current[id] ?? 0) + 1,
-    }))
-    setCheckoutMessage('')
+  const handleAddToCart = (id: Product['id']) => {
+    addToCart(id)
+    resetCheckoutMessage()
     setIsCartOpen(true)
   }
 
-  const changeQuantity = (id: Product['id'], delta: number) => {
-    setCartQuantities((current) => {
-      const quantity = (current[id] ?? 0) + delta
-
-      if (quantity <= 0) {
-        const next = { ...current }
-        delete next[id]
-        return next
-      }
-
-      return { ...current, [id]: quantity }
-    })
-    setCheckoutMessage('')
+  const handleChangeQuantity = (id: Product['id'], delta: number) => {
+    changeQuantity(id, delta)
+    resetCheckoutMessage()
   }
 
-  const removeFromCart = (id: Product['id']) => {
-    setCartQuantities((current) => {
-      const next = { ...current }
-      delete next[id]
-      return next
-    })
-    setCheckoutMessage('')
+  const handleRemoveFromCart = (id: Product['id']) => {
+    removeFromCart(id)
+    resetCheckoutMessage()
   }
-
-  const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const form = event.currentTarget
-    const emailControl = form.elements.namedItem('newsletterEmail')
-    const emailInput = emailControl instanceof HTMLInputElement ? emailControl : null
-
-    if (!emailInput || !emailInput.validity.valid) {
-      setNewsletterSucceeded(false)
-      setNewsletterMessage('Enter a valid email address.')
-      emailInput?.focus()
-      return
-    }
-
-    setNewsletterSucceeded(true)
-    setNewsletterMessage('Thanks — you’re on the Nexora list.')
-    form.reset()
-  }
-
-  const handleCheckout = () => {
-    if (cartCount === 0) {
-      setCheckoutMessage('Add at least one product before checkout.')
-      return
-    }
-
-    const checkoutWindow = window as Window & { NEXORA_STRIPE_CHECKOUT_URL?: unknown }
-    const hostedUrl = checkoutWindow.NEXORA_STRIPE_CHECKOUT_URL
-
-    if (typeof hostedUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(hostedUrl)) {
-      window.location.assign(hostedUrl)
-      return
-    }
-
-    setCheckoutMessage(
-      'Frontend demo only: connect your backend to create a Stripe Checkout Session, then redirect to session.url.',
-    )
-  }
-
-  const activeCategoryLabel = activeCategory
-    ? catalogCategories.find((category) => category.slug === activeCategory)?.name
-    : null
-
-  const filterLabels = [
-    activeCategoryLabel,
-    searchTerm.trim() ? `“${searchTerm.trim()}”` : null,
-  ].filter((label): label is string => Boolean(label))
 
   return (
     <>
@@ -248,9 +173,9 @@ export function StorefrontPage() {
 
           <nav className="desktop-nav" aria-label="Primary navigation">
             <a href="#featured">Shop</a>
-            <a href="#categories" onClick={() => applyCategoryFilter('smartphones')}>Phones</a>
-            <a href="#categories" onClick={() => applyCategoryFilter('laptops')}>Laptops</a>
-            <a href="#categories" onClick={() => applyCategoryFilter('audio')}>Audio</a>
+            <a href="#categories" onClick={() => selectCategory('smartphones')}>Phones</a>
+            <a href="#categories" onClick={() => selectCategory('laptops')}>Laptops</a>
+            <a href="#categories" onClick={() => selectCategory('audio')}>Audio</a>
             <a href="#promo">Deals</a>
           </nav>
 
@@ -306,7 +231,7 @@ export function StorefrontPage() {
           <a
             href="#categories"
             onClick={() => {
-              applyCategoryFilter('smartphones')
+              selectCategory('smartphones')
               setIsMobileNavOpen(false)
             }}
           >
@@ -315,7 +240,7 @@ export function StorefrontPage() {
           <a
             href="#categories"
             onClick={() => {
-              applyCategoryFilter('laptops')
+              selectCategory('laptops')
               setIsMobileNavOpen(false)
             }}
           >
@@ -324,7 +249,7 @@ export function StorefrontPage() {
           <a
             href="#categories"
             onClick={() => {
-              applyCategoryFilter('audio')
+              selectCategory('audio')
               setIsMobileNavOpen(false)
             }}
           >
@@ -357,7 +282,7 @@ export function StorefrontPage() {
                   <span className="hero-price-label">From</span>
                   <strong className="hero-price">R18,999</strong>
                 </div>
-                <button className="btn btn-primary" type="button" onClick={() => addToCart(heroProductId)}>
+                <button className="btn btn-primary" type="button" onClick={() => handleAddToCart(heroProductId)}>
                   Shop now
                 </button>
               </div>
@@ -401,7 +326,7 @@ export function StorefrontPage() {
               <button
                 className="category-card category-smartphones"
                 type="button"
-                onClick={() => applyCategoryFilter('smartphones')}
+                onClick={() => selectCategory('smartphones')}
               >
                 <div className="category-copy">
                   <span>01</span>
@@ -418,7 +343,7 @@ export function StorefrontPage() {
               <button
                 className="category-card category-laptops"
                 type="button"
-                onClick={() => applyCategoryFilter('laptops')}
+                onClick={() => selectCategory('laptops')}
               >
                 <div className="category-copy">
                   <span>02</span>
@@ -435,7 +360,7 @@ export function StorefrontPage() {
               <button
                 className="category-card category-audio"
                 type="button"
-                onClick={() => applyCategoryFilter('audio')}
+                onClick={() => selectCategory('audio')}
               >
                 <div className="category-copy">
                   <span>03</span>
@@ -467,7 +392,7 @@ export function StorefrontPage() {
 
             <div className="product-grid" hidden={displayedProducts.length === 0}>
               {displayedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
+                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
               ))}
             </div>
 
@@ -499,7 +424,7 @@ export function StorefrontPage() {
                   href="#featured"
                   onClick={(event) => {
                     event.preventDefault()
-                    applyCategoryFilter('laptops')
+                    selectCategory('laptops')
                   }}
                 >
                   Explore the deal
@@ -597,8 +522,8 @@ export function StorefrontPage() {
         quantities={cartQuantities}
         checkoutMessage={checkoutMessage}
         onClose={() => setIsCartOpen(false)}
-        onChangeQuantity={changeQuantity}
-        onRemove={removeFromCart}
+        onChangeQuantity={handleChangeQuantity}
+        onRemove={handleRemoveFromCart}
         onCheckout={handleCheckout}
       />
     </>
