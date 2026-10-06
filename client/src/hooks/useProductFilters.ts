@@ -1,7 +1,5 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
-import { catalogCategories, type Product } from '../data/products'
-
-export type CategorySlug = Product['category']['slug']
+import { catalogCategories, type CategorySlug, type Product } from '../data/products'
 
 export function useProductFilters(productList: Product[]) {
   const [activeCategory, setActiveCategory] = useState<CategorySlug | null>(null)

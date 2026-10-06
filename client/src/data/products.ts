@@ -1,9 +1,11 @@
 export type ProductVisual = 'phone' | 'laptop' | 'headphones' | 'gaming'
 
+export type CategorySlug = 'smartphones' | 'laptops' | 'audio'
+
 export type ProductCategory = {
   id: string
   name: string
-  slug: string
+  slug: CategorySlug
 }
 
 export type Product = {

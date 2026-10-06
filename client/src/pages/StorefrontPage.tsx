@@ -7,12 +7,14 @@ import {
   heroProductId,
   money,
   products,
+  type CategorySlug,
   type Product,
 } from '../data/products'
+import { promoCategorySlug, storefrontCategories, type StorefrontCategory } from '../data/storefrontCategories'
 import { useCart } from '../hooks/useCart'
 import { useCheckout } from '../hooks/useCheckout'
 import { useNewsletterForm } from '../hooks/useNewsletterForm'
-import { useProductFilters, type CategorySlug } from '../hooks/useProductFilters'
+import { useProductFilters } from '../hooks/useProductFilters'
 
 type ProductCardProps = {
   product: Product
@@ -78,6 +80,34 @@ function HeroPhoneArtwork() {
         <span>5G</span>
         <small>Flagship performance</small>
       </div>
+    </div>
+  )
+}
+
+function CategoryArt({ category }: { category: StorefrontCategory }) {
+  if (category.slug === 'smartphones') {
+    return (
+      <div className={`category-art ${category.artClassName}`} aria-hidden="true">
+        <div className="mini-phone mini-phone-a" />
+        <div className="mini-phone mini-phone-b" />
+      </div>
+    )
+  }
+
+  if (category.slug === 'laptops') {
+    return (
+      <div className={`category-art ${category.artClassName}`} aria-hidden="true">
+        <div className="mini-laptop-screen" />
+        <div className="mini-laptop-base" />
+      </div>
+    )
+  }
+
+  return (
+    <div className={`category-art ${category.artClassName}`} aria-hidden="true">
+      <div className="headphone-band" />
+      <div className="headphone-cup cup-left" />
+      <div className="headphone-cup cup-right" />
     </div>
   )
 }
@@ -173,9 +203,11 @@ export function StorefrontPage() {
 
           <nav className="desktop-nav" aria-label="Primary navigation">
             <a href="#featured">Shop</a>
-            <a href="#categories" onClick={() => selectCategory('smartphones')}>Phones</a>
-            <a href="#categories" onClick={() => selectCategory('laptops')}>Laptops</a>
-            <a href="#categories" onClick={() => selectCategory('audio')}>Audio</a>
+            {storefrontCategories.map((category) => (
+              <a href="#categories" key={category.slug} onClick={() => selectCategory(category.slug)}>
+                {category.navLabel}
+              </a>
+            ))}
             <a href="#promo">Deals</a>
           </nav>
 
@@ -228,33 +260,18 @@ export function StorefrontPage() {
 
         <nav className={`mobile-nav${isMobileNavOpen ? ' open' : ''}`} aria-label="Mobile navigation">
           <a href="#featured" onClick={() => setIsMobileNavOpen(false)}>Shop</a>
-          <a
-            href="#categories"
-            onClick={() => {
-              selectCategory('smartphones')
-              setIsMobileNavOpen(false)
-            }}
-          >
-            Phones
-          </a>
-          <a
-            href="#categories"
-            onClick={() => {
-              selectCategory('laptops')
-              setIsMobileNavOpen(false)
-            }}
-          >
-            Laptops
-          </a>
-          <a
-            href="#categories"
-            onClick={() => {
-              selectCategory('audio')
-              setIsMobileNavOpen(false)
-            }}
-          >
-            Audio
-          </a>
+          {storefrontCategories.map((category) => (
+            <a
+              href="#categories"
+              key={category.slug}
+              onClick={() => {
+                selectCategory(category.slug)
+                setIsMobileNavOpen(false)
+              }}
+            >
+              {category.navLabel}
+            </a>
+          ))}
           <a href="#promo" onClick={() => setIsMobileNavOpen(false)}>Deals</a>
         </nav>
       </header>
@@ -323,57 +340,22 @@ export function StorefrontPage() {
             </div>
 
             <div className="category-grid">
-              <button
-                className="category-card category-smartphones"
-                type="button"
-                onClick={() => selectCategory('smartphones')}
-              >
-                <div className="category-copy">
-                  <span>01</span>
-                  <h3>Smartphones</h3>
-                  <p>Flagship cameras, fast displays and reliable all-day power.</p>
-                  <strong>Shop smartphones →</strong>
-                </div>
-                <div className="category-art category-phone-art" aria-hidden="true">
-                  <div className="mini-phone mini-phone-a" />
-                  <div className="mini-phone mini-phone-b" />
-                </div>
-              </button>
-
-              <button
-                className="category-card category-laptops"
-                type="button"
-                onClick={() => selectCategory('laptops')}
-              >
-                <div className="category-copy">
-                  <span>02</span>
-                  <h3>Laptops</h3>
-                  <p>Portable productivity with premium displays and serious performance.</p>
-                  <strong>Shop laptops →</strong>
-                </div>
-                <div className="category-art category-laptop-art" aria-hidden="true">
-                  <div className="mini-laptop-screen" />
-                  <div className="mini-laptop-base" />
-                </div>
-              </button>
-
-              <button
-                className="category-card category-audio"
-                type="button"
-                onClick={() => selectCategory('audio')}
-              >
-                <div className="category-copy">
-                  <span>03</span>
-                  <h3>Audio</h3>
-                  <p>Immersive sound, clean design and wireless freedom.</p>
-                  <strong>Shop audio →</strong>
-                </div>
-                <div className="category-art category-headphone-art" aria-hidden="true">
-                  <div className="headphone-band" />
-                  <div className="headphone-cup cup-left" />
-                  <div className="headphone-cup cup-right" />
-                </div>
-              </button>
+              {storefrontCategories.map((category) => (
+                <button
+                  className={`category-card ${category.cardClassName}`}
+                  key={category.slug}
+                  type="button"
+                  onClick={() => selectCategory(category.slug)}
+                >
+                  <div className="category-copy">
+                    <span>{category.order}</span>
+                    <h3>{category.title}</h3>
+                    <p>{category.description}</p>
+                    <strong>{category.cta} →</strong>
+                  </div>
+                  <CategoryArt category={category} />
+                </button>
+              ))}
             </div>
           </div>
         </section>
@@ -424,7 +406,7 @@ export function StorefrontPage() {
                   href="#featured"
                   onClick={(event) => {
                     event.preventDefault()
-                    selectCategory('laptops')
+                    selectCategory(promoCategorySlug)
                   }}
                 >
                   Explore the deal
@@ -489,9 +471,11 @@ export function StorefrontPage() {
 
           <div>
             <h3>Shop</h3>
-            <a href="#categories">Smartphones</a>
-            <a href="#categories">Laptops</a>
-            <a href="#categories">Audio</a>
+            {storefrontCategories.map((category) => (
+              <a href="#categories" key={category.slug} onClick={() => selectCategory(category.slug)}>
+                {category.title}
+              </a>
+            ))}
             <a href="#promo">Deals</a>
           </div>
 
