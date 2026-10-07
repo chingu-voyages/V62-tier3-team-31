@@ -142,9 +142,9 @@ public sealed class CartService : ICartService
                 }
                 else
                 {
-                    userItem.Quantity = Math.Min(
-                        userItem.Quantity + guestItem.Quantity,
-                        Math.Max(guestItem.Product.StockQuantity, 0));
+                    var cap = Math.Min(MaximumQuantity, guestItem.Product.StockQuantity);
+                    if (cap >= 1)
+                        userItem.Quantity = Math.Min(userItem.Quantity + guestItem.Quantity, cap);
                     userItem.UpdatedAt = DateTime.UtcNow;
                     _context.CartItems.Remove(guestItem);
                 }
