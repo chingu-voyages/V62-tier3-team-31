@@ -30,8 +30,19 @@ builder.Services.AddOpenApi();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("DefaultConnection is not configured.");
+// Postgres enums must be registered with the driver as well as declared in the model,
+// otherwise Npgsql refuses to read or write order_status and fulfillment_status.
+var dataSource = new Npgsql.NpgsqlDataSourceBuilder(connectionString)
+    .MapEnum<Ecommerce.Core.Entities.OrderStatus>("order_status")
+    .MapEnum<Ecommerce.Core.Entities.FulfillmentStatus>("fulfillment_status")
+    .Build();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(dataSource, npgsql =>
+    {
+        // EF needs the mapping as well as the driver. Newer Npgsql no longer reads it from the data source.
+        npgsql.MapEnum<Ecommerce.Core.Entities.OrderStatus>("order_status");
+        npgsql.MapEnum<Ecommerce.Core.Entities.FulfillmentStatus>("fulfillment_status");
+    }));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICartService, CartService>();

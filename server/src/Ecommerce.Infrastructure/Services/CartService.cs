@@ -47,7 +47,11 @@ public sealed class CartService : ICartService
         if (item is null)
         {
             item = new CartItem { Cart = cart, ProductId = productId, Product = product, Quantity = newQuantity };
-            cart.Items.Add(item);
+            // Add through the DbSet. CartItem.Id is set in its initializer, so an item added only to
+            // the collection of a cart that is already tracked is treated as an existing row.
+            _context.CartItems.Add(item);
+            if (!cart.Items.Contains(item))
+                cart.Items.Add(item);
         }
         else
         {
