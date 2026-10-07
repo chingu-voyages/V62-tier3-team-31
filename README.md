@@ -13,6 +13,43 @@ in your `readme` feel free to replace the text we've provided here.
 
 > Own it & Make it your Own!
 
+## Getting started
+
+### Backend (`server/`)
+
+You need the .NET 10 SDK and PostgreSQL running locally. The database itself is created for you by the migration step.
+
+Set your local config with environment variables. Do not put real values in the appsettings files, because they are tracked by git.
+
+```bash
+export ConnectionStrings__DefaultConnection="Host=localhost;Port=5432;Database=ecommerce_db;Username=postgres;Password=YOUR_PASSWORD"
+export JwtSettings__AccessTokenSecret="a long random string, 32 characters or more"
+export JwtSettings__RefreshTokenSecret="a different long random string"
+export Cors__FrontendOrigin="http://localhost:5173"
+```
+
+On Windows PowerShell use `$env:JwtSettings__AccessTokenSecret = "..."` instead of `export`.
+
+Then, from the repo root:
+
+```bash
+cd server
+dotnet restore
+dotnet tool install --global dotnet-ef   # only once
+dotnet ef database update --project src/Ecommerce.Infrastructure --startup-project src/Ecommerce.Api
+dotnet run --project src/Ecommerce.Api --launch-profile https
+```
+
+`dotnet ef database update` creates the tables and the starter data (5 categories, 8 products). The API docs are at `https://localhost:7178/scalar/v1`. The auth and cart cookies are `Secure`, so use the `https` launch profile, not plain http.
+
+### Frontend (`client/`)
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
 ## Team Documents
 
 You may find these helpful as you work together to organize your project.
