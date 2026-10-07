@@ -10,7 +10,7 @@ import {
   type CategorySlug,
   type Product,
 } from '../data/products'
-import { promoCategorySlug, storefrontCategories, type StorefrontCategory } from '../data/storefrontCategories'
+import { promoCategorySlug, storefrontCategories } from '../data/storefrontCategories'
 import { useCart } from '../hooks/useCart'
 import { useCheckout } from '../hooks/useCheckout'
 import { useNewsletterForm } from '../hooks/useNewsletterForm'
@@ -80,34 +80,6 @@ function HeroPhoneArtwork() {
         <span>5G</span>
         <small>Flagship performance</small>
       </div>
-    </div>
-  )
-}
-
-function CategoryArt({ category }: { category: StorefrontCategory }) {
-  if (category.slug === 'smartphones') {
-    return (
-      <div className={`category-art ${category.artClassName}`} aria-hidden="true">
-        <div className="mini-phone mini-phone-a" />
-        <div className="mini-phone mini-phone-b" />
-      </div>
-    )
-  }
-
-  if (category.slug === 'laptops') {
-    return (
-      <div className={`category-art ${category.artClassName}`} aria-hidden="true">
-        <div className="mini-laptop-screen" />
-        <div className="mini-laptop-base" />
-      </div>
-    )
-  }
-
-  return (
-    <div className={`category-art ${category.artClassName}`} aria-hidden="true">
-      <div className="headphone-band" />
-      <div className="headphone-cup cup-left" />
-      <div className="headphone-cup cup-right" />
     </div>
   )
 }
@@ -192,7 +164,7 @@ export function StorefrontPage() {
 
   return (
     <>
-      <div className="announcement">Free delivery on orders over R750</div>
+      <div className="announcement">Free delivery on orders over $50</div>
 
       <header className="site-header">
         <div className="header-inner container">
@@ -204,7 +176,7 @@ export function StorefrontPage() {
           <nav className="desktop-nav" aria-label="Primary navigation">
             <a href="#featured">Shop</a>
             {storefrontCategories.map((category) => (
-              <a href="#categories" key={category.slug} onClick={() => selectCategory(category.slug)}>
+              <a href="#featured" key={category.slug} onClick={() => selectCategory(category.slug)}>
                 {category.navLabel}
               </a>
             ))}
@@ -262,7 +234,7 @@ export function StorefrontPage() {
           <a href="#featured" onClick={() => setIsMobileNavOpen(false)}>Shop</a>
           {storefrontCategories.map((category) => (
             <a
-              href="#categories"
+              href="#featured"
               key={category.slug}
               onClick={() => {
                 selectCategory(category.slug)
@@ -297,7 +269,7 @@ export function StorefrontPage() {
               <div className="hero-buy">
                 <div>
                   <span className="hero-price-label">From</span>
-                  <strong className="hero-price">R18,999</strong>
+                  <strong className="hero-price">$999</strong>
                 </div>
                 <button className="btn btn-primary" type="button" onClick={() => handleAddToCart(heroProductId)}>
                   Shop now
@@ -332,7 +304,7 @@ export function StorefrontPage() {
             <div className="section-heading">
               <div>
                 <p className="section-kicker">Shop by category</p>
-                <h2>Technology for every day.</h2>
+                <h2>Everyday essentials, chosen for you.</h2>
               </div>
               <a className="text-link" href="#featured">
                 View all products <span>→</span>
@@ -353,7 +325,9 @@ export function StorefrontPage() {
                     <p>{category.description}</p>
                     <strong>{category.cta} →</strong>
                   </div>
-                  <CategoryArt category={category} />
+                  <div className="category-art" aria-hidden="true">
+                    <span>{category.title.slice(0, 1)}</span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -368,7 +342,7 @@ export function StorefrontPage() {
                 <h2>Built to perform.</h2>
               </div>
               <div className="product-filter-status" aria-live="polite">
-                {filterLabels.length ? `Showing: ${filterLabels.join(' · ')}` : '4 featured products'}
+                {filterLabels.length ? `Showing: ${filterLabels.join(' · ')}` : `${products.length} featured products`}
               </div>
             </div>
 
@@ -399,7 +373,7 @@ export function StorefrontPage() {
                   with Nexora.
                 </h2>
                 <p>
-                  Save on selected laptops built for lectures, creative work and everything after class.
+                  Save on selected electronics built for lectures, creative work and everything after class.
                 </p>
                 <a
                   className="btn btn-light"
@@ -466,13 +440,13 @@ export function StorefrontPage() {
               <span className="brand-mark" aria-hidden="true" />
               <span>Nexora</span>
             </a>
-            <p>Premium consumer electronics with clear pricing, practical support and secure checkout.</p>
+            <p>Practical goods with clear pricing, helpful support and secure checkout.</p>
           </div>
 
           <div>
             <h3>Shop</h3>
             {storefrontCategories.map((category) => (
-              <a href="#categories" key={category.slug} onClick={() => selectCategory(category.slug)}>
+              <a href="#featured" key={category.slug} onClick={() => selectCategory(category.slug)}>
                 {category.title}
               </a>
             ))}

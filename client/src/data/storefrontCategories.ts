@@ -1,4 +1,4 @@
-import type { CategorySlug } from './products'
+import { catalogCategories, type CategorySlug } from './products'
 
 export type StorefrontCategory = {
   slug: CategorySlug
@@ -8,40 +8,24 @@ export type StorefrontCategory = {
   description: string
   cta: string
   cardClassName: string
-  artClassName: string
 }
 
-export const storefrontCategories: StorefrontCategory[] = [
-  {
-    slug: 'smartphones',
-    navLabel: 'Phones',
-    order: '01',
-    title: 'Smartphones',
-    description: 'Flagship cameras, fast displays and reliable all-day power.',
-    cta: 'Shop smartphones',
-    cardClassName: 'category-smartphones',
-    artClassName: 'category-phone-art',
-  },
-  {
-    slug: 'laptops',
-    navLabel: 'Laptops',
-    order: '02',
-    title: 'Laptops',
-    description: 'Portable productivity with premium displays and serious performance.',
-    cta: 'Shop laptops',
-    cardClassName: 'category-laptops',
-    artClassName: 'category-laptop-art',
-  },
-  {
-    slug: 'audio',
-    navLabel: 'Audio',
-    order: '03',
-    title: 'Audio',
-    description: 'Immersive sound, clean design and wireless freedom.',
-    cta: 'Shop audio',
-    cardClassName: 'category-audio',
-    artClassName: 'category-headphone-art',
-  },
-]
+const categoryDescriptions: Record<CategorySlug, string> = {
+  electronics: 'Devices and accessories for work, play and everyday life.',
+  books: 'Stories, ideas and practical guides for every kind of reader.',
+  kitchen: 'Useful essentials for preparing, serving and sharing meals.',
+  stationery: 'Pens, paper and desk tools to keep ideas moving.',
+  toys: 'Playful picks made for curious minds and big imaginations.',
+}
 
-export const promoCategorySlug: CategorySlug = 'laptops'
+export const storefrontCategories: StorefrontCategory[] = catalogCategories.map((category, index) => ({
+  slug: category.slug,
+  navLabel: category.name,
+  order: String(index + 1).padStart(2, '0'),
+  title: category.name,
+  description: categoryDescriptions[category.slug],
+  cta: `Shop ${category.name.toLowerCase()}`,
+  cardClassName: `category-${category.slug}`,
+}))
+
+export const promoCategorySlug: CategorySlug = 'electronics'

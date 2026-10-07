@@ -23,7 +23,7 @@ npm run build
 
 - Responsive header, mobile navigation, hero, category cards, featured products,
   promotion, newsletter, footer, and cart drawer
-- Search and category filtering, in-memory cart quantities and ZAR subtotal
+- Search and category filtering, in-memory cart quantities and USD subtotal
 - Newsletter validation and Stripe-hosted Checkout handoff demo
 - Four mock products and CSS-only visual artwork
 
