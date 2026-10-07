@@ -15,10 +15,11 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var accessSecret = jwtSettings["AccessTokenSecret"]
-    ?? throw new InvalidOperationException("JWT access-token secret is not configured.");
-var refreshSecret = jwtSettings["RefreshTokenSecret"]
-    ?? throw new InvalidOperationException("JWT refresh-token secret is not configured.");
+var accessSecret = jwtSettings["AccessTokenSecret"];
+var refreshSecret = jwtSettings["RefreshTokenSecret"];
+if (string.IsNullOrWhiteSpace(accessSecret) || string.IsNullOrWhiteSpace(refreshSecret))
+    throw new InvalidOperationException(
+        "JWT secrets are not configured. Set JwtSettings:AccessTokenSecret and JwtSettings:RefreshTokenSecret.");
 var issuer = jwtSettings["Issuer"]
     ?? throw new InvalidOperationException("JWT issuer is not configured.");
 var audience = jwtSettings["Audience"]
@@ -55,6 +56,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;    
     options.KnownProxies.Clear();
+    options.KnownIPNetworks.Clear();
 });
 
 builder.Services.AddAuthentication(options =>

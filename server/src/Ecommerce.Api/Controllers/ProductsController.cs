@@ -57,13 +57,13 @@ public sealed class ProductsController : ControllerBase
             productsQuery = productsQuery.Where(product => EF.Functions.ILike(product.Title, $"%{escapedSearch}%"));
         }
 
-        productsQuery = normalizedSort switch
+        productsQuery = (normalizedSort switch
         {
             "price_asc" => productsQuery.OrderBy(product => product.Price),
             "price_desc" => productsQuery.OrderByDescending(product => product.Price),
             "title_asc" => productsQuery.OrderBy(product => product.Title),
             _ => productsQuery.OrderByDescending(product => product.CreatedAt)
-        };
+        }).ThenBy(product => product.Id);
 
         var total = await productsQuery.CountAsync();
         var totalPages = (int)Math.Ceiling(total / (double)parsedLimit);
