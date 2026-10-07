@@ -57,6 +57,8 @@ You may find these helpful as you work together to organize your project.
 
 - [Team Project Ideas](./docs/team_project_ideas.md)
 - [Team Decision Log](./docs/team_decision_log.md)
+- API contracts: [Auth](./docs/api-contract-auth.md), [Products](./docs/api-contract-products.md), [Cart](./docs/api-contract-cart.md), [Checkout & Stripe](./docs/api-contract-checkout.md), [Orders](./docs/api-contract-orders.md)
+- [Database schema](./docs/database-schema.sql) (reference design, see the note at the top of the file)
 
 Meeting Agenda templates (located in the `/docs` directory in this repo):
 
