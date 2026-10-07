@@ -1,25 +1,20 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
-import { CartDrawer, type CartQuantities } from '../components/CartDrawer'
+import { useEffect, useState } from 'react'
+import { CartDrawer } from '../components/CartDrawer'
 import { DeviceArt } from '../components/DeviceArt'
 import {
-  catalogCategories,
   getStockLabel,
   hasLimitedStock,
   heroProductId,
   money,
   products,
+  type CategorySlug,
   type Product,
 } from '../data/products'
-
-type CategorySlug = Product['category']['slug']
-
-const categoryDescriptions: Record<CategorySlug, string> = {
-  electronics: 'Devices and accessories for work, play and everyday life.',
-  books: 'Stories, ideas and practical guides for every kind of reader.',
-  kitchen: 'Useful essentials for preparing, serving and sharing meals.',
-  stationery: 'Pens, paper and desk tools to keep ideas moving.',
-  toys: 'Playful picks made for curious minds and big imaginations.',
-}
+import { promoCategorySlug, storefrontCategories } from '../data/storefrontCategories'
+import { useCart } from '../hooks/useCart'
+import { useCheckout } from '../hooks/useCheckout'
+import { useNewsletterForm } from '../hooks/useNewsletterForm'
+import { useProductFilters } from '../hooks/useProductFilters'
 
 type ProductCardProps = {
   product: Product
@@ -90,35 +85,33 @@ function HeroPhoneArtwork() {
 }
 
 export function StorefrontPage() {
-  const [activeCategory, setActiveCategory] = useState<CategorySlug | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [cartQuantities, setCartQuantities] = useState<CartQuantities>({})
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
-  const [newsletterMessage, setNewsletterMessage] = useState('')
-  const [newsletterSucceeded, setNewsletterSucceeded] = useState(false)
-  const [checkoutMessage, setCheckoutMessage] = useState('')
-
-  const displayedProducts = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase()
-
-    return products.filter((product) => {
-      const categoryMatches = !activeCategory || product.category.slug === activeCategory
-      const searchMatches =
-        !normalizedSearch ||
-        [product.title, product.category.name, product.category.slug, product.description]
-          .join(' ')
-          .toLowerCase()
-          .includes(normalizedSearch)
-
-      return categoryMatches && searchMatches
-    })
-  }, [activeCategory, searchTerm])
-
-  const cartCount = Object.values(cartQuantities).reduce<number>(
-    (total, quantity) => total + (quantity ?? 0),
-    0,
-  )
+  const {
+    cartQuantities,
+    cartCount,
+    addToCart,
+    changeQuantity,
+    removeFromCart,
+  } = useCart()
+  const {
+    checkoutMessage,
+    handleCheckout,
+    resetCheckoutMessage,
+  } = useCheckout(cartCount)
+  const {
+    newsletterMessage,
+    newsletterSucceeded,
+    handleNewsletterSubmit,
+  } = useNewsletterForm()
+  const {
+    searchTerm,
+    displayedProducts,
+    filterLabels,
+    applyCategoryFilter,
+    clearFilters,
+    handleSearch,
+  } = useProductFilters(products)
 
   useEffect(() => {
     if (!isCartOpen) {
@@ -148,100 +141,26 @@ export function StorefrontPage() {
     document.getElementById('featured')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const applyCategoryFilter = (category: CategorySlug) => {
-    setActiveCategory(category)
-    setSearchTerm('')
+  const selectCategory = (category: CategorySlug) => {
+    applyCategoryFilter(category)
     scrollToFeatured()
   }
 
-  const clearFilters = () => {
-    setActiveCategory(null)
-    setSearchTerm('')
-  }
-
-  const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value)
-    setActiveCategory(null)
-  }
-
-  const addToCart = (id: Product['id']) => {
-    setCartQuantities((current) => ({
-      ...current,
-      [id]: (current[id] ?? 0) + 1,
-    }))
-    setCheckoutMessage('')
+  const handleAddToCart = (id: Product['id']) => {
+    addToCart(id)
+    resetCheckoutMessage()
     setIsCartOpen(true)
   }
 
-  const changeQuantity = (id: Product['id'], delta: number) => {
-    setCartQuantities((current) => {
-      const quantity = (current[id] ?? 0) + delta
-
-      if (quantity <= 0) {
-        const next = { ...current }
-        delete next[id]
-        return next
-      }
-
-      return { ...current, [id]: quantity }
-    })
-    setCheckoutMessage('')
+  const handleChangeQuantity = (id: Product['id'], delta: number) => {
+    changeQuantity(id, delta)
+    resetCheckoutMessage()
   }
 
-  const removeFromCart = (id: Product['id']) => {
-    setCartQuantities((current) => {
-      const next = { ...current }
-      delete next[id]
-      return next
-    })
-    setCheckoutMessage('')
+  const handleRemoveFromCart = (id: Product['id']) => {
+    removeFromCart(id)
+    resetCheckoutMessage()
   }
-
-  const handleNewsletterSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const form = event.currentTarget
-    const emailControl = form.elements.namedItem('newsletterEmail')
-    const emailInput = emailControl instanceof HTMLInputElement ? emailControl : null
-
-    if (!emailInput || !emailInput.validity.valid) {
-      setNewsletterSucceeded(false)
-      setNewsletterMessage('Enter a valid email address.')
-      emailInput?.focus()
-      return
-    }
-
-    setNewsletterSucceeded(true)
-    setNewsletterMessage('Thanks — you’re on the Nexora list.')
-    form.reset()
-  }
-
-  const handleCheckout = () => {
-    if (cartCount === 0) {
-      setCheckoutMessage('Add at least one product before checkout.')
-      return
-    }
-
-    const checkoutWindow = window as Window & { NEXORA_STRIPE_CHECKOUT_URL?: unknown }
-    const hostedUrl = checkoutWindow.NEXORA_STRIPE_CHECKOUT_URL
-
-    if (typeof hostedUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(hostedUrl)) {
-      window.location.assign(hostedUrl)
-      return
-    }
-
-    setCheckoutMessage(
-      'Frontend demo only: connect your backend to create a Stripe Checkout Session, then redirect to session.url.',
-    )
-  }
-
-  const activeCategoryLabel = activeCategory
-    ? catalogCategories.find((category) => category.slug === activeCategory)?.name
-    : null
-
-  const filterLabels = [
-    activeCategoryLabel,
-    searchTerm.trim() ? `“${searchTerm.trim()}”` : null,
-  ].filter((label): label is string => Boolean(label))
 
   return (
     <>
@@ -256,7 +175,11 @@ export function StorefrontPage() {
 
           <nav className="desktop-nav" aria-label="Primary navigation">
             <a href="#featured">Shop</a>
-            <a href="#categories">Categories</a>
+            {storefrontCategories.map((category) => (
+              <a href="#featured" key={category.slug} onClick={() => selectCategory(category.slug)}>
+                {category.navLabel}
+              </a>
+            ))}
             <a href="#promo">Deals</a>
           </nav>
 
@@ -309,7 +232,18 @@ export function StorefrontPage() {
 
         <nav className={`mobile-nav${isMobileNavOpen ? ' open' : ''}`} aria-label="Mobile navigation">
           <a href="#featured" onClick={() => setIsMobileNavOpen(false)}>Shop</a>
-          <a href="#categories" onClick={() => setIsMobileNavOpen(false)}>Categories</a>
+          {storefrontCategories.map((category) => (
+            <a
+              href="#featured"
+              key={category.slug}
+              onClick={() => {
+                selectCategory(category.slug)
+                setIsMobileNavOpen(false)
+              }}
+            >
+              {category.navLabel}
+            </a>
+          ))}
           <a href="#promo" onClick={() => setIsMobileNavOpen(false)}>Deals</a>
         </nav>
       </header>
@@ -337,7 +271,7 @@ export function StorefrontPage() {
                   <span className="hero-price-label">From</span>
                   <strong className="hero-price">$999</strong>
                 </div>
-                <button className="btn btn-primary" type="button" onClick={() => addToCart(heroProductId)}>
+                <button className="btn btn-primary" type="button" onClick={() => handleAddToCart(heroProductId)}>
                   Shop now
                 </button>
               </div>
@@ -378,21 +312,21 @@ export function StorefrontPage() {
             </div>
 
             <div className="category-grid">
-              {catalogCategories.map((category, index) => (
+              {storefrontCategories.map((category) => (
                 <button
-                  key={category.id}
-                  className={`category-card category-${category.slug}`}
+                  className={`category-card ${category.cardClassName}`}
+                  key={category.slug}
                   type="button"
-                  onClick={() => applyCategoryFilter(category.slug)}
+                  onClick={() => selectCategory(category.slug)}
                 >
                   <div className="category-copy">
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <h3>{category.name}</h3>
-                    <p>{categoryDescriptions[category.slug]}</p>
-                    <strong>Shop {category.name.toLowerCase()} →</strong>
+                    <span>{category.order}</span>
+                    <h3>{category.title}</h3>
+                    <p>{category.description}</p>
+                    <strong>{category.cta} →</strong>
                   </div>
                   <div className="category-art" aria-hidden="true">
-                    <span>{category.name.slice(0, 1)}</span>
+                    <span>{category.title.slice(0, 1)}</span>
                   </div>
                 </button>
               ))}
@@ -414,7 +348,7 @@ export function StorefrontPage() {
 
             <div className="product-grid" hidden={displayedProducts.length === 0}>
               {displayedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
+                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
               ))}
             </div>
 
@@ -446,7 +380,7 @@ export function StorefrontPage() {
                   href="#featured"
                   onClick={(event) => {
                     event.preventDefault()
-                    applyCategoryFilter('electronics')
+                    selectCategory(promoCategorySlug)
                   }}
                 >
                   Explore the deal
@@ -511,16 +445,9 @@ export function StorefrontPage() {
 
           <div>
             <h3>Shop</h3>
-            {catalogCategories.map((category) => (
-              <a
-                key={category.id}
-                href="#featured"
-                onClick={(event) => {
-                  event.preventDefault()
-                  applyCategoryFilter(category.slug)
-                }}
-              >
-                {category.name}
+            {storefrontCategories.map((category) => (
+              <a href="#featured" key={category.slug} onClick={() => selectCategory(category.slug)}>
+                {category.title}
               </a>
             ))}
             <a href="#promo">Deals</a>
@@ -553,8 +480,8 @@ export function StorefrontPage() {
         quantities={cartQuantities}
         checkoutMessage={checkoutMessage}
         onClose={() => setIsCartOpen(false)}
-        onChangeQuantity={changeQuantity}
-        onRemove={removeFromCart}
+        onChangeQuantity={handleChangeQuantity}
+        onRemove={handleRemoveFromCart}
         onCheckout={handleCheckout}
       />
     </>

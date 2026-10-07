@@ -29,6 +29,7 @@ export const catalogCategories = [
 ] as const
 
 export type ProductCategory = (typeof catalogCategories)[number]
+export type CategorySlug = ProductCategory['slug']
 
 export type Product = {
   id: string
