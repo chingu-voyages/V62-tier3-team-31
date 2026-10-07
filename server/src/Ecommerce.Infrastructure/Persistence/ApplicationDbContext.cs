@@ -51,6 +51,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<StripeEvent>()
             .HasKey(e => e.Id);
 
+        modelBuilder.Entity<Category>().HasData(Ecommerce.Infrastructure.Persistence.CatalogSeed.Categories);
+        modelBuilder.Entity<Product>().HasData(Ecommerce.Infrastructure.Persistence.CatalogSeed.Products);
+
         modelBuilder.Entity<Product>()
             .HasOne(p => p.Category)
             .WithMany(c => c.Products)
