@@ -33,8 +33,6 @@ appsettings.Local.json
 *.svclog
 *.cdproj
 
-# Entity Framework Core design files
-*.designer.cs
 
 ## ----------------------------------------------------------------------
 ## Node / React (Frontend)
@@ -64,6 +62,5 @@ desktop.ini
 ## ----------------------------------------------------------------------
 ## Database & EF Core Exports
 ## ----------------------------------------------------------------------
-*.sql
 *.db
 *.sqlite
