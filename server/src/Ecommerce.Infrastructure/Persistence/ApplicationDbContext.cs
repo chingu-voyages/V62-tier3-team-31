@@ -40,6 +40,14 @@ public class ApplicationDbContext : DbContext
             .HasIndex(c => c.SessionId)
             .IsUnique();
 
+        modelBuilder.Entity<Cart>()
+            .HasIndex(c => c.UserId)
+            .IsUnique();
+
+        modelBuilder.Entity<CartItem>()
+            .HasIndex(i => new { i.CartId, i.ProductId })
+            .IsUnique();
+
         modelBuilder.Entity<StripeEvent>()
             .HasKey(e => e.Id);
 
