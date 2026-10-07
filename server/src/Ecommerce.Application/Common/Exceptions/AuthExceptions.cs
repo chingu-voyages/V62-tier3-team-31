@@ -16,6 +16,16 @@ public sealed class InvalidRequestException : Exception
     }
 }
 
+public sealed class CartNotFoundException : Exception
+{
+    public CartNotFoundException(string message) : base(message) { }
+}
+
+public sealed class CartConflictException : Exception
+{
+    public CartConflictException(string message) : base(message) { }
+}
+
 public sealed class ProductNotFoundException : Exception
 {
     public ProductNotFoundException() : base("Product not found") { }

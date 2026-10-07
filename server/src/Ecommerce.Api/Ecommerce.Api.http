@@ -4,3 +4,21 @@ GET {{Ecommerce.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+@accessToken = replace-with-access-token
+@orderId = 1f4c8b2a-6d3e-4790-b8a5-0c2e9f7d1a36
+
+### List my orders
+GET {{Ecommerce.Api_HostAddress}}/api/v1/orders?page=1&limit=10
+Cookie: access_token={{accessToken}}
+Accept: application/json
+
+### Get an order
+GET {{Ecommerce.Api_HostAddress}}/api/v1/orders/{{orderId}}
+Cookie: access_token={{accessToken}}
+Accept: application/json
+
+### Reject an invalid order ID
+GET {{Ecommerce.Api_HostAddress}}/api/v1/orders/not-a-uuid
+Cookie: access_token={{accessToken}}
+Accept: application/json

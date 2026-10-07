@@ -4,6 +4,7 @@ using Ecommerce.Constants.Api;
 using Ecommerce.Core.Entities;
 using Ecommerce.Infrastructure.Services;
 using Ecommerce.Middlewares.Api;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -32,6 +33,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddCors(options =>
@@ -77,6 +80,15 @@ builder.Services.AddAuthentication(options =>
 
     options.Events = new JwtBearerEvents
     {
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(
+                JsonSerializer.Serialize(new { title = "Not logged in", status = StatusCodes.Status401Unauthorized }),
+                context.HttpContext.RequestAborted);
+        },
         OnMessageReceived = context =>
         {
 
