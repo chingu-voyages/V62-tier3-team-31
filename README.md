@@ -19,16 +19,17 @@ in your `readme` feel free to replace the text we've provided here.
 
 You need the .NET 10 SDK and PostgreSQL running locally. The database itself is created for you by the migration step.
 
-Set your local config with environment variables. Do not put real values in the appsettings files, because they are tracked by git.
+Store your local config once with .NET user secrets. They are saved on your own machine, outside the repo, so a password can never be committed, and they load automatically when you run in Development.
 
 ```bash
-export ConnectionStrings__DefaultConnection="Host=localhost;Port=5432;Database=ecommerce_db;Username=postgres;Password=YOUR_PASSWORD"
-export JwtSettings__AccessTokenSecret="a long random string, 32 characters or more"
-export JwtSettings__RefreshTokenSecret="a different long random string"
-export Cors__FrontendOrigin="http://localhost:5173"
+cd server/src/Ecommerce.Api
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=ecommerce_db;Username=postgres;Password=YOUR_PASSWORD"
+dotnet user-secrets set "JwtSettings:AccessTokenSecret" "a long random string, 32 characters or more"
+dotnet user-secrets set "JwtSettings:RefreshTokenSecret" "a different long random string"
+cd ../../..
 ```
 
-On Windows PowerShell use `$env:JwtSettings__AccessTokenSecret = "..."` instead of `export`.
+Everyone sets their own values. Nothing secret is stored in the repo.
 
 Then, from the repo root:
 

@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoWarn>$(NoWarn);NU1903</NoWarn>
+    <UserSecretsId>832dac9b-2bc2-4ece-b2fd-a119e264a3db</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
