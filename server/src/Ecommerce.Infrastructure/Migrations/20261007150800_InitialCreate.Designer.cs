@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Ecommerce.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260923114333_InitialCreate")]
+    [Migration("20261007150800_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -66,7 +66,8 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasIndex("SessionId")
                         .IsUnique();
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Carts");
                 });
@@ -94,9 +95,10 @@ namespace Ecommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CartId");
-
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("CartId", "ProductId")
+                        .IsUnique();
 
                     b.ToTable("CartItems");
                 });
@@ -124,6 +126,48 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Electronics",
+                            Slug = "electronics",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("8f0a7df6-22c2-4900-8e47-b3d2d6be8bc6"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Books",
+                            Slug = "books",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("d4c2d79d-b3c3-4b26-85e8-dad8f89dbcd1"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Kitchen",
+                            Slug = "kitchen",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0e6ccf6-555b-48c8-b4e6-26826a464e26"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Stationery",
+                            Slug = "stationery",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("ec0d92a8-8ec8-4d21-8d2e-29c2f9c38430"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Toys",
+                            Slug = "toys",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("Ecommerce.Core.Entities.Order", b =>
@@ -147,8 +191,33 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.Property<decimal>("RefundedAmount")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("ShippingAddress")
+                    b.Property<string>("ShippingAddressLine1")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingAddressLine2")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingCity")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingCountry")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingPhone")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingPostalCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingState")
                         .HasColumnType("text");
 
                     b.Property<int>("Status")
@@ -278,6 +347,104 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1f623603-229d-40ac-a52f-5c040efb174a"),
+                            CategoryId = new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 1, 0, 0, DateTimeKind.Utc),
+                            Description = "256GB · 6.7\" AMOLED · 5G",
+                            IsActive = true,
+                            Price = 999m,
+                            StockQuantity = 8,
+                            Title = "Nexora One X",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 1, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("bc224020-0bf0-4eb4-88b2-1fe2b0408a86"),
+                            CategoryId = new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 2, 0, 0, DateTimeKind.Utc),
+                            Description = "14\" 2.8K · 16GB RAM · 512GB SSD",
+                            IsActive = true,
+                            Price = 899m,
+                            StockQuantity = 6,
+                            Title = "AeroBook 14",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 2, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("cf578350-5640-4d0e-b676-1fc32b6c0c83"),
+                            CategoryId = new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 3, 0, 0, DateTimeKind.Utc),
+                            Description = "Wireless · Noise cancelling · 50h",
+                            IsActive = true,
+                            Price = 249m,
+                            StockQuantity = 3,
+                            Title = "Pulse ANC Pro",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 3, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("1303f95d-a3b1-4697-8721-72c624d7e9e9"),
+                            CategoryId = new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 4, 0, 0, DateTimeKind.Utc),
+                            Description = "15.6\" QHD · RTX-class graphics · 16GB RAM",
+                            IsActive = true,
+                            Price = 1299m,
+                            StockQuantity = 5,
+                            Title = "Volt G15",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 4, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("5d6ab7cc-d3d1-434b-bd74-8f388ff04cf7"),
+                            CategoryId = new Guid("8f0a7df6-22c2-4900-8e47-b3d2d6be8bc6"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 5, 0, 0, DateTimeKind.Utc),
+                            Description = "A hands-on guide to memory, processes and the kernel.",
+                            IsActive = true,
+                            Price = 34.99m,
+                            StockQuantity = 12,
+                            Title = "Systems Programming in C",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 5, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("245ad70d-64e3-4721-b73a-d6adc324f1bb"),
+                            CategoryId = new Guid("d4c2d79d-b3c3-4b26-85e8-dad8f89dbcd1"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 6, 0, 0, DateTimeKind.Utc),
+                            Description = "Pre-seasoned skillet for the stove and the oven.",
+                            IsActive = true,
+                            Price = 34.99m,
+                            StockQuantity = 15,
+                            Title = "Cast Iron Skillet 10in",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 6, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("ff7715c2-3e0a-4229-8b8d-a4de405d3ca8"),
+                            CategoryId = new Guid("a0e6ccf6-555b-48c8-b4e6-26826a464e26"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 7, 0, 0, DateTimeKind.Utc),
+                            Description = "160 pages of 100gsm paper with a lay-flat spine.",
+                            IsActive = true,
+                            Price = 12.99m,
+                            StockQuantity = 40,
+                            Title = "Dot Grid Notebook A5",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 7, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("eb52a79a-de3b-48e3-bced-93c9335e3949"),
+                            CategoryId = new Guid("ec0d92a8-8ec8-4d21-8d2e-29c2f9c38430"),
+                            CreatedAt = new DateTime(2026, 10, 1, 0, 8, 0, 0, DateTimeKind.Utc),
+                            Description = "100 smooth beechwood blocks in a cotton bag.",
+                            IsActive = true,
+                            Price = 24.99m,
+                            StockQuantity = 25,
+                            Title = "Wooden Building Blocks Set",
+                            UpdatedAt = new DateTime(2026, 10, 1, 0, 8, 0, 0, DateTimeKind.Utc)
+                        });
                 });
 
             modelBuilder.Entity("Ecommerce.Core.Entities.User", b =>
@@ -308,6 +475,9 @@ namespace Ecommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
@@ -315,7 +485,8 @@ namespace Ecommerce.Infrastructure.Migrations
                 {
                     b.HasOne("Ecommerce.Core.Entities.User", "User")
                         .WithMany("Carts")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("User");
                 });
@@ -325,13 +496,13 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasOne("Ecommerce.Core.Entities.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Ecommerce.Core.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Cart");
@@ -344,7 +515,7 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasOne("Ecommerce.Core.Entities.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -355,13 +526,13 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasOne("Ecommerce.Core.Entities.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Ecommerce.Core.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -372,9 +543,9 @@ namespace Ecommerce.Infrastructure.Migrations
             modelBuilder.Entity("Ecommerce.Core.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("Ecommerce.Core.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("PasswordResetTokens")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -385,7 +556,7 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.HasOne("Ecommerce.Core.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -411,6 +582,8 @@ namespace Ecommerce.Infrastructure.Migrations
                     b.Navigation("Carts");
 
                     b.Navigation("Orders");
+
+                    b.Navigation("PasswordResetTokens");
                 });
 #pragma warning restore 612, 618
         }
