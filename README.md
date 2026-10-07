@@ -43,6 +43,26 @@ dotnet run --project src/Ecommerce.Api --launch-profile https
 
 `dotnet ef database update` creates the tables and the starter data (5 categories, 8 products). The API docs are at `https://localhost:7178/scalar/v1`. The auth and cart cookies are `Secure`, so use the `https` launch profile, not plain http.
 
+### Stripe (test mode)
+
+Checkout and the webhook need a free Stripe account in test mode. Add the keys as user secrets, never in a file that is committed:
+
+```bash
+cd server/src/Ecommerce.Api
+dotnet user-secrets set "Stripe:SecretKey" "sk_test_..."
+dotnet user-secrets set "Stripe:WebhookSecret" "whsec_..."
+cd ../../..
+```
+
+For local development, forward Stripe events to the API with the [Stripe CLI](https://docs.stripe.com/stripe-cli). `stripe listen` prints the `whsec_...` signing secret to use above:
+
+```bash
+stripe login
+stripe listen --forward-to https://localhost:7178/api/v1/webhooks/stripe --skip-verify
+```
+
+Pay with the test card `4242 4242 4242 4242`, any future expiry date and any CVC.
+
 ### Frontend (`client/`)
 
 ```bash

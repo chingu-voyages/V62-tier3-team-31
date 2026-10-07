@@ -140,7 +140,7 @@ The 200 goes back only after the database transaction has committed. No backgrou
 | `checkout.session.completed` | the important one, below |
 | `checkout.session.expired` | `status` → `cancelled` |
 | `payment_intent.payment_failed` | `status` → `failed`, store the reason in `failure_reason` |
-| `charge.refunded` | add to `refunded_amount`; `status` → `refunded` if it now equals the total, otherwise `partially_refunded` |
+| `charge.refunded` | set `refunded_amount` to the charge's `amount_refunded` (Stripe sends the running total, so a repeat can't double count); `status` → `refunded` if it now equals the total, otherwise `partially_refunded` |
 | `charge.dispute.created` | `status` → `disputed` |
 
 Any other event: record it in `stripe_events` and return 200. Unknown events are not errors.
@@ -154,7 +154,9 @@ Any other event: record it in `stripe_events` and return 200. Unknown events are
 5. Empty the user's cart.
 6. Commit, then return 200.
 
-**If stock went negative** at step 4 — the case where two people bought the last item — still mark the order paid, because the money was taken. Set `stock_quantity` to 0 rather than a negative, and flag the order for a manual refund. Never silently drop the payment.
+Only act when the session's `payment_status` is `paid`. A `failed` order can still become `paid` if the customer retries inside the same Stripe session.
+
+**If stock went negative** at step 4 — the case where two people bought the last item — still mark the order paid, because the money was taken. Set `stock_quantity` to 0 rather than a negative, and flag the order for a manual refund by writing a note in `failure_reason`. Never silently drop the payment.
 
 **Responses to Stripe**
 

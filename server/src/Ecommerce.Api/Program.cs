@@ -47,6 +47,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+
+builder.Services.Configure<Ecommerce.Infrastructure.Configuration.StripeSettings>(
+    builder.Configuration.GetSection("Stripe"));
+builder.Services.PostConfigure<Ecommerce.Infrastructure.Configuration.StripeSettings>(settings =>
+{
+    // The customer is sent back to the frontend, so reuse the CORS origin instead of a second setting.
+    if (string.IsNullOrWhiteSpace(settings.FrontendUrl))
+        settings.FrontendUrl = builder.Configuration["Cors:FrontendOrigin"] ?? string.Empty;
+});
+builder.Services.AddScoped<ICheckoutService, CheckoutService>();
+builder.Services.AddScoped<IStripeWebhookService, StripeWebhookService>();
+builder.Services.AddHttpClient<IPaymentGateway, StripePaymentGateway>(client =>
+    client.Timeout = TimeSpan.FromSeconds(20));
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddCors(options =>
