@@ -1,35 +1,43 @@
-import { money, productById, type Product } from '../data/products'
-import type { CartQuantities } from '../types/cart'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { money, visualFor } from '../data/products'
+import { useAuth } from '../hooks/useAuth'
+import { useCart } from '../hooks/useCart'
 
-type CartDrawerProps = {
-  isOpen: boolean
-  quantities: CartQuantities
-  checkoutMessage: string
-  onClose: () => void
-  onChangeQuantity: (id: Product['id'], delta: number) => void
-  onRemove: (id: Product['id']) => void
-  onCheckout: () => void
-}
+export function CartDrawer() {
+  const { cart, message, isOpen, closeCart, setQuantity, removeItem } = useCart()
+  const { user } = useAuth()
+  const navigate = useNavigate()
 
-export function CartDrawer({
-  isOpen,
-  quantities,
-  checkoutMessage,
-  onClose,
-  onChangeQuantity,
-  onRemove,
-  onCheckout,
-}: CartDrawerProps) {
-  const entries = Object.entries(quantities)
-    .map(([id, quantity]) => {
-      const product = productById.get(id as Product['id'])
-      return product && quantity ? { product, quantity } : null
-    })
-    .filter((entry): entry is { product: Product; quantity: number } => entry !== null)
-  const subtotal = entries.reduce(
-    (total, { product, quantity }) => total + product.price * quantity,
-    0,
-  )
+  const isEmpty = cart.items.length === 0
+  const hasUnavailable = cart.items.some((item) => !item.available)
+
+  // Lock the page behind the drawer while it is open.
+  useEffect(() => {
+    if (!isOpen) return
+
+    const savedOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = savedOverflow
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeCart()
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [closeCart])
+
+  const handleCheckout = () => {
+    closeCart()
+    // Guests log in first. Logging in merges their cart, then they come back here.
+    navigate(user ? '/checkout' : '/login?next=%2Fcheckout')
+  }
 
   return (
     <>
@@ -37,7 +45,7 @@ export function CartDrawer({
         aria-hidden="true"
         className={`drawer-backdrop${isOpen ? ' visible' : ''}`}
         hidden={!isOpen}
-        onClick={onClose}
+        onClick={closeCart}
       />
 
       <aside
@@ -50,7 +58,7 @@ export function CartDrawer({
             <p className="section-kicker">Your cart</p>
             <h2>Shopping bag</h2>
           </div>
-          <button className="icon-button" type="button" aria-label="Close cart" onClick={onClose}>
+          <button className="icon-button" type="button" aria-label="Close cart" onClick={closeCart}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
@@ -58,35 +66,51 @@ export function CartDrawer({
         </div>
 
         <div className="cart-items">
-          {entries.map(({ product, quantity }) => (
-            <div className="cart-item" data-visual={product.visual} key={product.id}>
+          {cart.items.map((item) => (
+            <div
+              className={`cart-item${item.available ? '' : ' unavailable'}`}
+              data-visual={visualFor(item.productId)}
+              key={item.productId}
+            >
               <div className="cart-thumb">
-                <div className="cart-thumb-shape" />
+                {item.imageUrl ? (
+                  <img className="cart-thumb-photo" src={item.imageUrl} alt="" loading="lazy" />
+                ) : (
+                  <div className="cart-thumb-shape" />
+                )}
               </div>
               <div className="cart-item-info">
-                <h3>{product.title}</h3>
-                <p>{product.description}</p>
-                <div className="qty" aria-label="Quantity controls">
-                  <button
-                    type="button"
-                    aria-label={`Decrease ${product.title} quantity`}
-                    onClick={() => onChangeQuantity(product.id, -1)}
-                  >
-                    −
-                  </button>
-                  <span>{quantity}</span>
-                  <button
-                    type="button"
-                    aria-label={`Increase ${product.title} quantity`}
-                    onClick={() => onChangeQuantity(product.id, 1)}
-                  >
-                    +
-                  </button>
-                </div>
+                <h3>{item.title}</h3>
+                {item.available ? (
+                  <div className="qty" aria-label="Quantity controls">
+                    <button
+                      type="button"
+                      aria-label={`Decrease ${item.title} quantity`}
+                      onClick={() =>
+                        item.quantity <= 1
+                          ? removeItem(item.productId)
+                          : setQuantity(item.productId, item.quantity - 1)
+                      }
+                    >
+                      −
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      type="button"
+                      aria-label={`Increase ${item.title} quantity`}
+                      disabled={item.quantity >= 99}
+                      onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <p className="cart-item-note">No longer available. Remove it to check out.</p>
+                )}
               </div>
               <div className="cart-item-side">
-                <strong>{money.format(product.price * quantity)}</strong>
-                <button className="remove-item" type="button" onClick={() => onRemove(product.id)}>
+                <strong>{item.available ? money.format(item.lineTotal) : '—'}</strong>
+                <button className="remove-item" type="button" onClick={() => removeItem(item.productId)}>
                   Remove
                 </button>
               </div>
@@ -94,7 +118,7 @@ export function CartDrawer({
           ))}
         </div>
 
-        <div className={`cart-empty${entries.length === 0 ? ' visible' : ''}`}>
+        <div className={`cart-empty${isEmpty ? ' visible' : ''}`}>
           <div className="cart-empty-icon">N</div>
           <h3>Your cart is empty</h3>
           <p>Add something from the featured collection to get started.</p>
@@ -103,21 +127,26 @@ export function CartDrawer({
         <div className="cart-summary">
           <div className="subtotal-line">
             <span>Subtotal</span>
-            <strong>{money.format(subtotal)}</strong>
+            <strong>{money.format(cart.subtotal)}</strong>
           </div>
           <p>Delivery is calculated at checkout.</p>
 
-          <button className="btn btn-primary btn-block" type="button" onClick={onCheckout}>
+          <button
+            className="btn btn-primary btn-block"
+            type="button"
+            disabled={isEmpty || hasUnavailable}
+            onClick={handleCheckout}
+          >
             Secure checkout
           </button>
           <p className="stripe-note">
             Redirects to Stripe-hosted Checkout. Nexora does not collect card details on this page.
           </p>
           <p className="checkout-message" aria-live="polite">
-            {checkoutMessage}
+            {message}
           </p>
 
-          <button className="btn btn-secondary btn-block" type="button" onClick={onClose}>
+          <button className="btn btn-secondary btn-block" type="button" onClick={closeCart}>
             Continue shopping
           </button>
         </div>

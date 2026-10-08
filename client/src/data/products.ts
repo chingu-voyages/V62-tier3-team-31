@@ -1,5 +1,10 @@
-export type ProductVisual = 'phone' | 'laptop' | 'headphones' | 'gaming'
+// Products now come from the backend (GET /api/v1/products).
+// This file keeps what the UI still needs locally: the category list used for the nav,
+// the artwork choice for the demo products, and small formatting helpers.
 
+export type ProductVisual = 'phone' | 'laptop' | 'headphones' | 'gaming' | 'generic'
+
+// Same ids and slugs as the seeded categories in the database.
 export const catalogCategories = [
   {
     id: '2b8d4a1c-5b85-4a27-934f-4f6c76f2e501',
@@ -28,78 +33,28 @@ export const catalogCategories = [
   },
 ] as const
 
-export type ProductCategory = (typeof catalogCategories)[number]
-export type CategorySlug = ProductCategory['slug']
+export type CategorySlug = (typeof catalogCategories)[number]['slug']
 
-export type Product = {
-  id: string
-  title: string
-  description: string
-  price: number
-  stockQuantity: number
-  imageUrl: string | null
-  category: ProductCategory
-  visual: ProductVisual
+// The four electronics have drawn artwork. Everything else gets a plain tile.
+const visualsById: Record<string, ProductVisual> = {
+  '1f623603-229d-40ac-a52f-5c040efb174a': 'phone',
+  'bc224020-0bf0-4eb4-88b2-1fe2b0408a86': 'laptop',
+  'cf578350-5640-4d0e-b676-1fc32b6c0c83': 'headphones',
+  '1303f95d-a3b1-4697-8721-72c624d7e9e9': 'gaming',
 }
 
-const electronicsCategory = catalogCategories[0]
+export function visualFor(productId: string): ProductVisual {
+  return visualsById[productId] ?? 'generic'
+}
 
-export const products: Product[] = [
-  {
-    id: '1f623603-229d-40ac-a52f-5c040efb174a',
-    title: 'Nexora One X',
-    description: '256GB · 6.7" AMOLED · 5G',
-    price: 999,
-    stockQuantity: 8,
-    imageUrl: null,
-    category: electronicsCategory,
-    visual: 'phone',
-  },
-  {
-    id: 'bc224020-0bf0-4eb4-88b2-1fe2b0408a86',
-    title: 'AeroBook 14',
-    description: '14" 2.8K · 16GB RAM · 512GB SSD',
-    price: 899,
-    stockQuantity: 6,
-    imageUrl: null,
-    category: electronicsCategory,
-    visual: 'laptop',
-  },
-  {
-    id: 'cf578350-5640-4d0e-b676-1fc32b6c0c83',
-    title: 'Pulse ANC Pro',
-    description: 'Wireless · Noise cancelling · 50h',
-    price: 249,
-    stockQuantity: 3,
-    imageUrl: null,
-    category: electronicsCategory,
-    visual: 'headphones',
-  },
-  {
-    id: '1303f95d-a3b1-4697-8721-72c624d7e9e9',
-    title: 'Volt G15',
-    description: '15.6" QHD · RTX-class graphics · 16GB RAM',
-    price: 1299,
-    stockQuantity: 5,
-    imageUrl: null,
-    category: electronicsCategory,
-    visual: 'gaming',
-  },
-]
+// The hero button adds this product.
+export const heroProductId = '1f623603-229d-40ac-a52f-5c040efb174a'
 
-export const productById = new Map(products.map((product) => [product.id, product]))
-
-export const heroProductId = products[0].id
-
+// The API never sends a stock number above 10, so 10 means "10 or more".
 export function getStockLabel(stockQuantity: number) {
-  if (stockQuantity <= 0) {
-    return 'Out of stock'
-  }
-
-  if (stockQuantity <= 3) {
-    return `${stockQuantity} left`
-  }
-
+  if (stockQuantity <= 0) return 'Out of stock'
+  if (stockQuantity <= 3) return `${stockQuantity} left`
+  if (stockQuantity >= 10) return 'In stock'
   return `${stockQuantity} in stock`
 }
 
@@ -107,8 +62,14 @@ export function hasLimitedStock(stockQuantity: number) {
   return stockQuantity > 0 && stockQuantity <= 3
 }
 
-export const money = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-})
+// Whole dollars stay whole ($999), anything else shows cents ($34.99).
+export const money = {
+  format(value: number) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(value)
+  },
+}
