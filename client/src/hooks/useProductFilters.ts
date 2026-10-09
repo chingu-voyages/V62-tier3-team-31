@@ -1,5 +1,6 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
-import { catalogCategories, type CategorySlug, type Product } from '../data/products'
+import { catalogCategories, type CategorySlug } from '../data/products'
+import type { Product } from '../types/api'
 
 export function useProductFilters(productList: Product[]) {
   const [activeCategory, setActiveCategory] = useState<CategorySlug | null>(null)
@@ -12,7 +13,7 @@ export function useProductFilters(productList: Product[]) {
       const categoryMatches = !activeCategory || product.category.slug === activeCategory
       const searchMatches =
         !normalizedSearch ||
-        [product.title, product.category.name, product.category.slug, product.description]
+        [product.title, product.category.name, product.category.slug, product.description ?? '']
           .join(' ')
           .toLowerCase()
           .includes(normalizedSearch)

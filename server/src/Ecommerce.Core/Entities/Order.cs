@@ -7,10 +7,12 @@ public class Order
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public FulfillmentStatus FulfillmentStatus { get; set; } = FulfillmentStatus.Unfulfilled;
     public decimal TotalAmount { get; set; }
+    public string ShippingName { get; set; } = string.Empty;
+    public string? ShippingPhone { get; set; }
     public string ShippingAddressLine1 { get; set; } = string.Empty;
     public string? ShippingAddressLine2 { get; set; }
     public string ShippingCity { get; set; } = string.Empty;
-    public string ShippingState { get; set; } = string.Empty;
+    public string? ShippingState { get; set; }
     public string ShippingPostalCode { get; set; } = string.Empty;
     public string ShippingCountry { get; set; } = string.Empty;
     public string? StripeSessionId { get; set; }

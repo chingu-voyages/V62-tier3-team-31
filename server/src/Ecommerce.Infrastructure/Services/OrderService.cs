@@ -58,7 +58,6 @@ public sealed class OrderService(ApplicationDbContext context) : IOrderService
     {
         var order = await context.Orders
             .AsNoTracking()
-            .Include(candidate => candidate.User)
             .Include(candidate => candidate.Items)
                 .ThenInclude(item => item.Product)
             .FirstOrDefaultAsync(
@@ -79,12 +78,6 @@ public sealed class OrderService(ApplicationDbContext context) : IOrderService
                 RoundMoney(item.UnitPrice * item.Quantity)))
             .ToArray();
 
-        var name = string.Join(
-            ' ',
-            new[] { order.User.FirstName, order.User.LastName }
-                .Where(part => !string.IsNullOrWhiteSpace(part))
-                .Select(part => part!.Trim()));
-
         return new OrderDto(
             order.Id,
             FormatStatus(order.Status),
@@ -92,8 +85,8 @@ public sealed class OrderService(ApplicationDbContext context) : IOrderService
             RoundMoney(order.TotalAmount),
             RoundMoney(order.RefundedAmount),
             new OrderShippingDto(
-                name,
-                null,
+                order.ShippingName,
+                order.ShippingPhone,
                 order.ShippingAddressLine1,
                 order.ShippingAddressLine2,
                 order.ShippingCity,

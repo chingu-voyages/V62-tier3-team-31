@@ -1,20 +1,20 @@
-import { useEffect, useState } from 'react'
-import { CartDrawer } from '../components/CartDrawer'
+import { useState } from 'react'
+import { AccountMenu } from '../components/AccountMenu'
 import { DeviceArt } from '../components/DeviceArt'
 import {
   getStockLabel,
   hasLimitedStock,
   heroProductId,
   money,
-  products,
+  visualFor,
   type CategorySlug,
-  type Product,
 } from '../data/products'
 import { promoCategorySlug, storefrontCategories } from '../data/storefrontCategories'
 import { useCart } from '../hooks/useCart'
-import { useCheckout } from '../hooks/useCheckout'
 import { useNewsletterForm } from '../hooks/useNewsletterForm'
 import { useProductFilters } from '../hooks/useProductFilters'
+import { useProducts } from '../hooks/useProducts'
+import type { Product } from '../types/api'
 
 type ProductCardProps = {
   product: Product
@@ -23,11 +23,16 @@ type ProductCardProps = {
 
 function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const stockLabel = getStockLabel(product.stockQuantity)
+  const soldOut = product.stockQuantity <= 0
 
   return (
-    <article className="product-card">
+    <article className={`product-card${soldOut ? ' sold-out' : ''}`}>
       <div className="product-media">
-        <DeviceArt visual={product.visual} />
+        {product.imageUrl ? (
+          <img className="product-photo" src={product.imageUrl} alt="" loading="lazy" />
+        ) : (
+          <DeviceArt visual={visualFor(product.id)} label={product.category.name.slice(0, 1)} />
+        )}
       </div>
       <div className="product-body">
         <h3 className="product-name">{product.title}</h3>
@@ -38,8 +43,13 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
             {stockLabel}
           </span>
         </div>
-        <button className="btn btn-primary" type="button" onClick={() => onAddToCart(product.id)}>
-          Add to cart
+        <button
+          className="btn btn-primary"
+          type="button"
+          disabled={soldOut}
+          onClick={() => onAddToCart(product.id)}
+        >
+          {soldOut ? 'Out of stock' : 'Add to cart'}
         </button>
       </div>
     </article>
@@ -85,20 +95,9 @@ function HeroPhoneArtwork() {
 }
 
 export function StorefrontPage() {
-  const [isCartOpen, setIsCartOpen] = useState(false)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
-  const {
-    cartQuantities,
-    cartCount,
-    addToCart,
-    changeQuantity,
-    removeFromCart,
-  } = useCart()
-  const {
-    checkoutMessage,
-    handleCheckout,
-    resetCheckoutMessage,
-  } = useCheckout(cartCount)
+  const { cart, addItem, openCart } = useCart()
+  const { products, status: productsStatus, retry: retryProducts } = useProducts()
   const {
     newsletterMessage,
     newsletterSucceeded,
@@ -113,30 +112,6 @@ export function StorefrontPage() {
     handleSearch,
   } = useProductFilters(products)
 
-  useEffect(() => {
-    if (!isCartOpen) {
-      return
-    }
-
-    const savedOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = savedOverflow
-    }
-  }, [isCartOpen])
-
-  useEffect(() => {
-    const closeCartOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsCartOpen(false)
-      }
-    }
-
-    document.addEventListener('keydown', closeCartOnEscape)
-    return () => document.removeEventListener('keydown', closeCartOnEscape)
-  }, [])
-
   const scrollToFeatured = () => {
     document.getElementById('featured')?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -146,20 +121,10 @@ export function StorefrontPage() {
     scrollToFeatured()
   }
 
-  const handleAddToCart = (id: Product['id']) => {
-    addToCart(id)
-    resetCheckoutMessage()
-    setIsCartOpen(true)
-  }
-
-  const handleChangeQuantity = (id: Product['id'], delta: number) => {
-    changeQuantity(id, delta)
-    resetCheckoutMessage()
-  }
-
-  const handleRemoveFromCart = (id: Product['id']) => {
-    removeFromCart(id)
-    resetCheckoutMessage()
+  // The drawer opens either way, so a failure message (for example "Only 4 left in stock") is visible.
+  const handleAddToCart = async (id: Product['id']) => {
+    await addItem(id)
+    openCart()
   }
 
   return (
@@ -198,22 +163,18 @@ export function StorefrontPage() {
               />
             </label>
 
-            <button className="icon-button" type="button" aria-label="Account">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 0 0-2Z" />
-              </svg>
-            </button>
+            <AccountMenu />
 
             <button
               className="icon-button cart-button"
               type="button"
               aria-label="Open cart"
-              onClick={() => setIsCartOpen(true)}
+              onClick={openCart}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M3 3h2l2 12h10l2-8H6m3 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2Zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
               </svg>
-              <span className="cart-count">{cartCount}</span>
+              <span className="cart-count">{cart.itemCount}</span>
             </button>
 
             <button
@@ -342,23 +303,49 @@ export function StorefrontPage() {
                 <h2>Built to perform.</h2>
               </div>
               <div className="product-filter-status" aria-live="polite">
-                {filterLabels.length ? `Showing: ${filterLabels.join(' · ')}` : `${products.length} featured products`}
+                {productsStatus !== 'ready'
+                  ? ''
+                  : filterLabels.length
+                    ? `Showing: ${filterLabels.join(' · ')}`
+                    : `${products.length} featured products`}
               </div>
             </div>
 
-            <div className="product-grid" hidden={displayedProducts.length === 0}>
-              {displayedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
-              ))}
-            </div>
+            {productsStatus === 'loading' && (
+              <div className="product-grid" aria-busy="true" aria-label="Loading products">
+                {[0, 1, 2, 3].map((slot) => (
+                  <div className="product-card skeleton" key={slot} />
+                ))}
+              </div>
+            )}
 
-            <div className="empty-products" hidden={displayedProducts.length !== 0}>
-              <h3>No products found</h3>
-              <p>Try another search term or clear the current filter.</p>
-              <button className="btn btn-secondary" type="button" onClick={clearFilters}>
-                Clear filter
-              </button>
-            </div>
+            {productsStatus === 'error' && (
+              <div className="empty-products">
+                <h3>We could not load the products</h3>
+                <p>Check your connection and try again.</p>
+                <button className="btn btn-secondary" type="button" onClick={retryProducts}>
+                  Try again
+                </button>
+              </div>
+            )}
+
+            {productsStatus === 'ready' && (
+              <>
+                <div className="product-grid" hidden={displayedProducts.length === 0}>
+                  {displayedProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+                  ))}
+                </div>
+
+                <div className="empty-products" hidden={displayedProducts.length !== 0}>
+                  <h3>No products found</h3>
+                  <p>Try another search term or clear the current filter.</p>
+                  <button className="btn btn-secondary" type="button" onClick={clearFilters}>
+                    Clear filter
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
@@ -474,16 +461,6 @@ export function StorefrontPage() {
           <span>No real brand logos are used.</span>
         </div>
       </footer>
-
-      <CartDrawer
-        isOpen={isCartOpen}
-        quantities={cartQuantities}
-        checkoutMessage={checkoutMessage}
-        onClose={() => setIsCartOpen(false)}
-        onChangeQuantity={handleChangeQuantity}
-        onRemove={handleRemoveFromCart}
-        onCheckout={handleCheckout}
-      />
     </>
   )
 }

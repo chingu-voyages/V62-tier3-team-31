@@ -13,12 +13,72 @@ in your `readme` feel free to replace the text we've provided here.
 
 > Own it & Make it your Own!
 
+## Getting started
+
+### Backend (`server/`)
+
+You need the .NET 10 SDK and PostgreSQL running locally. The database itself is created for you by the migration step.
+
+Store your local config once with .NET user secrets. They are saved on your own machine, outside the repo, so a password can never be committed, and they load automatically when you run in Development.
+
+```bash
+cd server/src/Ecommerce.Api
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=ecommerce_db;Username=postgres;Password=YOUR_PASSWORD"
+dotnet user-secrets set "JwtSettings:AccessTokenSecret" "a long random string, 32 characters or more"
+dotnet user-secrets set "JwtSettings:RefreshTokenSecret" "a different long random string"
+cd ../../..
+```
+
+Everyone sets their own values. Nothing secret is stored in the repo.
+
+Then, from the repo root:
+
+```bash
+cd server
+dotnet restore
+dotnet tool install --global dotnet-ef   # only once
+dotnet ef database update --project src/Ecommerce.Infrastructure --startup-project src/Ecommerce.Api
+dotnet run --project src/Ecommerce.Api --launch-profile https
+```
+
+`dotnet ef database update` creates the tables and the starter data (5 categories, 8 products). The API docs are at `https://localhost:7178/scalar/v1`. The auth and cart cookies are `Secure`, so use the `https` launch profile, not plain http.
+
+### Stripe (test mode)
+
+Checkout and the webhook need a free Stripe account in test mode. Add the keys as user secrets, never in a file that is committed:
+
+```bash
+cd server/src/Ecommerce.Api
+dotnet user-secrets set "Stripe:SecretKey" "sk_test_..."
+dotnet user-secrets set "Stripe:WebhookSecret" "whsec_..."
+cd ../../..
+```
+
+For local development, forward Stripe events to the API with the [Stripe CLI](https://docs.stripe.com/stripe-cli). `stripe listen` prints the `whsec_...` signing secret to use above:
+
+```bash
+stripe login
+stripe listen --forward-to https://localhost:7178/api/v1/webhooks/stripe --skip-verify
+```
+
+Pay with the test card `4242 4242 4242 4242`, any future expiry date and any CVC.
+
+### Frontend (`client/`)
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
 ## Team Documents
 
 You may find these helpful as you work together to organize your project.
 
 - [Team Project Ideas](./docs/team_project_ideas.md)
 - [Team Decision Log](./docs/team_decision_log.md)
+- API contracts: [Auth](./docs/api-contract-auth.md), [Products](./docs/api-contract-products.md), [Cart](./docs/api-contract-cart.md), [Checkout & Stripe](./docs/api-contract-checkout.md), [Orders](./docs/api-contract-orders.md)
+- [Database schema](./docs/database-schema.sql) (reference design, see the note at the top of the file)
 
 Meeting Agenda templates (located in the `/docs` directory in this repo):
 

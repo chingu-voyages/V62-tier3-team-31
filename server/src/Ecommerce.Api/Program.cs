@@ -15,10 +15,11 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var accessSecret = jwtSettings["AccessTokenSecret"]
-    ?? throw new InvalidOperationException("JWT access-token secret is not configured.");
-var refreshSecret = jwtSettings["RefreshTokenSecret"]
-    ?? throw new InvalidOperationException("JWT refresh-token secret is not configured.");
+var accessSecret = jwtSettings["AccessTokenSecret"];
+var refreshSecret = jwtSettings["RefreshTokenSecret"];
+if (string.IsNullOrWhiteSpace(accessSecret) || string.IsNullOrWhiteSpace(refreshSecret))
+    throw new InvalidOperationException(
+        "JWT secrets are not configured. Set JwtSettings:AccessTokenSecret and JwtSettings:RefreshTokenSecret.");
 var issuer = jwtSettings["Issuer"]
     ?? throw new InvalidOperationException("JWT issuer is not configured.");
 var audience = jwtSettings["Audience"]
@@ -29,12 +30,36 @@ builder.Services.AddOpenApi();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("DefaultConnection is not configured.");
+// Postgres enums must be registered with the driver as well as declared in the model,
+// otherwise Npgsql refuses to read or write order_status and fulfillment_status.
+var dataSource = new Npgsql.NpgsqlDataSourceBuilder(connectionString)
+    .MapEnum<Ecommerce.Core.Entities.OrderStatus>("order_status")
+    .MapEnum<Ecommerce.Core.Entities.FulfillmentStatus>("fulfillment_status")
+    .Build();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(dataSource, npgsql =>
+    {
+        // EF needs the mapping as well as the driver. Newer Npgsql no longer reads it from the data source.
+        npgsql.MapEnum<Ecommerce.Core.Entities.OrderStatus>("order_status");
+        npgsql.MapEnum<Ecommerce.Core.Entities.FulfillmentStatus>("fulfillment_status");
+    }));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+
+builder.Services.Configure<Ecommerce.Infrastructure.Configuration.StripeSettings>(
+    builder.Configuration.GetSection("Stripe"));
+builder.Services.PostConfigure<Ecommerce.Infrastructure.Configuration.StripeSettings>(settings =>
+{
+    // The customer is sent back to the frontend, so reuse the CORS origin instead of a second setting.
+    if (string.IsNullOrWhiteSpace(settings.FrontendUrl))
+        settings.FrontendUrl = builder.Configuration["Cors:FrontendOrigin"] ?? string.Empty;
+});
+builder.Services.AddScoped<ICheckoutService, CheckoutService>();
+builder.Services.AddScoped<IStripeWebhookService, StripeWebhookService>();
+builder.Services.AddHttpClient<IPaymentGateway, StripePaymentGateway>(client =>
+    client.Timeout = TimeSpan.FromSeconds(20));
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddCors(options =>
@@ -55,6 +80,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;    
     options.KnownProxies.Clear();
+    options.KnownIPNetworks.Clear();
 });
 
 builder.Services.AddAuthentication(options =>

@@ -2,9 +2,11 @@ import type { ProductVisual } from '../data/products'
 
 type DeviceArtProps = {
   visual: ProductVisual
+  // the letter shown on the plain tile used for products without drawn artwork
+  label?: string
 }
 
-export function DeviceArt({ visual }: DeviceArtProps) {
+export function DeviceArt({ visual, label = '' }: DeviceArtProps) {
   if (visual === 'phone') {
     return <div className="device-phone" aria-hidden="true" />
   }
@@ -22,5 +24,13 @@ export function DeviceArt({ visual }: DeviceArtProps) {
     )
   }
 
-  return <div className="device-gaming" aria-hidden="true" />
+  if (visual === 'gaming') {
+    return <div className="device-gaming" aria-hidden="true" />
+  }
+
+  return (
+    <div className="device-generic" aria-hidden="true">
+      <span>{label}</span>
+    </div>
+  )
 }

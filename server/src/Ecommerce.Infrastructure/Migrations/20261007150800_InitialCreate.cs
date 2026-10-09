@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Ecommerce.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreateV2 : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -83,7 +85,7 @@ namespace Ecommerce.Infrastructure.Migrations
                         column: x => x.CategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -103,7 +105,8 @@ namespace Ecommerce.Infrastructure.Migrations
                         name: "FK_Carts_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -115,7 +118,14 @@ namespace Ecommerce.Infrastructure.Migrations
                     Status = table.Column<int>(type: "order_status", nullable: false),
                     FulfillmentStatus = table.Column<int>(type: "fulfillment_status", nullable: false),
                     TotalAmount = table.Column<decimal>(type: "numeric", nullable: false),
-                    ShippingAddress = table.Column<string>(type: "text", nullable: false),
+                    ShippingName = table.Column<string>(type: "text", nullable: false),
+                    ShippingPhone = table.Column<string>(type: "text", nullable: true),
+                    ShippingAddressLine1 = table.Column<string>(type: "text", nullable: false),
+                    ShippingAddressLine2 = table.Column<string>(type: "text", nullable: true),
+                    ShippingCity = table.Column<string>(type: "text", nullable: false),
+                    ShippingState = table.Column<string>(type: "text", nullable: true),
+                    ShippingPostalCode = table.Column<string>(type: "text", nullable: false),
+                    ShippingCountry = table.Column<string>(type: "text", nullable: false),
                     StripeSessionId = table.Column<string>(type: "text", nullable: true),
                     StripePaymentIntentId = table.Column<string>(type: "text", nullable: true),
                     RefundedAmount = table.Column<decimal>(type: "numeric", nullable: false),
@@ -132,7 +142,7 @@ namespace Ecommerce.Infrastructure.Migrations
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -154,7 +164,7 @@ namespace Ecommerce.Infrastructure.Migrations
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -176,13 +186,13 @@ namespace Ecommerce.Infrastructure.Migrations
                         column: x => x.CartId,
                         principalTable: "Carts",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_CartItems_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -205,19 +215,47 @@ namespace Ecommerce.Infrastructure.Migrations
                         column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_OrderItems_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.InsertData(
+                table: "Categories",
+                columns: new[] { "Id", "CreatedAt", "Name", "Slug", "UpdatedAt" },
+                values: new object[,]
+                {
+                    { new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"), new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Electronics", "electronics", new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("8f0a7df6-22c2-4900-8e47-b3d2d6be8bc6"), new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Books", "books", new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("a0e6ccf6-555b-48c8-b4e6-26826a464e26"), new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Stationery", "stationery", new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("d4c2d79d-b3c3-4b26-85e8-dad8f89dbcd1"), new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Kitchen", "kitchen", new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("ec0d92a8-8ec8-4d21-8d2e-29c2f9c38430"), new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Toys", "toys", new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc) }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Products",
+                columns: new[] { "Id", "CategoryId", "CreatedAt", "Description", "ImageUrl", "IsActive", "Price", "StockQuantity", "Title", "UpdatedAt" },
+                values: new object[,]
+                {
+                    { new Guid("1303f95d-a3b1-4697-8721-72c624d7e9e9"), new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"), new DateTime(2026, 10, 1, 0, 4, 0, 0, DateTimeKind.Utc), "15.6\" QHD · RTX-class graphics · 16GB RAM", null, true, 1299m, 5, "Volt G15", new DateTime(2026, 10, 1, 0, 4, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("1f623603-229d-40ac-a52f-5c040efb174a"), new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"), new DateTime(2026, 10, 1, 0, 1, 0, 0, DateTimeKind.Utc), "256GB · 6.7\" AMOLED · 5G", null, true, 999m, 8, "Nexora One X", new DateTime(2026, 10, 1, 0, 1, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("245ad70d-64e3-4721-b73a-d6adc324f1bb"), new Guid("d4c2d79d-b3c3-4b26-85e8-dad8f89dbcd1"), new DateTime(2026, 10, 1, 0, 6, 0, 0, DateTimeKind.Utc), "Pre-seasoned skillet for the stove and the oven.", null, true, 34.99m, 15, "Cast Iron Skillet 10in", new DateTime(2026, 10, 1, 0, 6, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("5d6ab7cc-d3d1-434b-bd74-8f388ff04cf7"), new Guid("8f0a7df6-22c2-4900-8e47-b3d2d6be8bc6"), new DateTime(2026, 10, 1, 0, 5, 0, 0, DateTimeKind.Utc), "A hands-on guide to memory, processes and the kernel.", null, true, 34.99m, 12, "Systems Programming in C", new DateTime(2026, 10, 1, 0, 5, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("bc224020-0bf0-4eb4-88b2-1fe2b0408a86"), new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"), new DateTime(2026, 10, 1, 0, 2, 0, 0, DateTimeKind.Utc), "14\" 2.8K · 16GB RAM · 512GB SSD", null, true, 899m, 6, "AeroBook 14", new DateTime(2026, 10, 1, 0, 2, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("cf578350-5640-4d0e-b676-1fc32b6c0c83"), new Guid("2b8d4a1c-5b85-4a27-934f-4f6c76f2e501"), new DateTime(2026, 10, 1, 0, 3, 0, 0, DateTimeKind.Utc), "Wireless · Noise cancelling · 50h", null, true, 249m, 3, "Pulse ANC Pro", new DateTime(2026, 10, 1, 0, 3, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("eb52a79a-de3b-48e3-bced-93c9335e3949"), new Guid("ec0d92a8-8ec8-4d21-8d2e-29c2f9c38430"), new DateTime(2026, 10, 1, 0, 8, 0, 0, DateTimeKind.Utc), "100 smooth beechwood blocks in a cotton bag.", null, true, 24.99m, 25, "Wooden Building Blocks Set", new DateTime(2026, 10, 1, 0, 8, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("ff7715c2-3e0a-4229-8b8d-a4de405d3ca8"), new Guid("a0e6ccf6-555b-48c8-b4e6-26826a464e26"), new DateTime(2026, 10, 1, 0, 7, 0, 0, DateTimeKind.Utc), "160 pages of 100gsm paper with a lay-flat spine.", null, true, 12.99m, 40, "Dot Grid Notebook A5", new DateTime(2026, 10, 1, 0, 7, 0, 0, DateTimeKind.Utc) }
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_CartItems_CartId",
+                name: "IX_CartItems_CartId_ProductId",
                 table: "CartItems",
-                column: "CartId");
+                columns: new[] { "CartId", "ProductId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_CartItems_ProductId",
@@ -233,7 +271,8 @@ namespace Ecommerce.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Carts_UserId",
                 table: "Carts",
-                column: "UserId");
+                column: "UserId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId",
@@ -259,6 +298,12 @@ namespace Ecommerce.Infrastructure.Migrations
                 name: "IX_Products_CategoryId",
                 table: "Products",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />

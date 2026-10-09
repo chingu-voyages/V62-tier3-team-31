@@ -28,6 +28,10 @@ public sealed class GlobalExceptionMiddleware
         {
             await WriteAsync(context, StatusCodes.Status404NotFound, ex.Message, errors: null);
         }
+        catch (ProductNotFoundException ex)
+        {
+            await WriteAsync(context, StatusCodes.Status404NotFound, ex.Message, errors: null);
+        }
         catch (CartConflictException ex)
         {
             await WriteAsync(context, StatusCodes.Status409Conflict, ex.Message, errors: null);
