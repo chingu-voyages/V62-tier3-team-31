@@ -94,8 +94,10 @@ Everyone on your team should add their name along with a link to their GitHub
 your repo access and to practice PR'ing with your team *before* you start
 coding!
 
-- Simbongile Mkhotheli: [GitHub](https://github.com/simbongile-mkhotheli) / [LinkedIn](https://linkedin.com/in/mkoteli/)
-- Pauline Christelle: [GitHub](https://github.com/pchristelle)] / [LinkedIn](https://www.linkedin.com/in/christelle-nemb-exin-agile-scrum-master/?isSelfProfile=true)]
-- Cristian Ancutza: [GitHub](https://github.com/CristianAncutza)] / [LinkedIn](https://www.linkedin.com/in/cristian-ancutza/)]
+- Simbongile Mkhotheli - Developer:   [GitHub](https://github.com/simbongile-mkhotheli) / [LinkedIn](https://linkedin.com/in/mkoteli/)
+- Rola                 - Developer:   [GitHub](https://github.com/rola-infra) /
+- Cristian Ancutza     - Developer:   [GitHub](https://github.com/CristianAncutza)] / [LinkedIn](https://www.linkedin.com/in/cristian-ancutza/)]
+- Christelle Nemb      - Scrum Master:[GitHub](https://github.com/pchristelle)] / [LinkedIn](https://www.linkedin.com/in/christelle-nemb/)
+
    ...
 - Teammate name #n: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
