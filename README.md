@@ -97,5 +97,6 @@ coding!
 - Simbongile Mkhotheli: [GitHub](https://github.com/simbongile-mkhotheli) / [LinkedIn](https://linkedin.com/in/mkoteli/)
 - Pauline Christelle: [GitHub](https://github.com/pchristelle)] / [LinkedIn](https://www.linkedin.com/in/christelle-nemb-exin-agile-scrum-master/?isSelfProfile=true)]
 - Cristian Ancutza: [GitHub](https://github.com/CristianAncutza)] / [LinkedIn](https://www.linkedin.com/in/cristian-ancutza/)]
-   ...
-- Teammate name #n: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
+
+Special Thanks
+We as a whole team would like to thank the Chingu platform and community for this great opportunity we've all had to learn, improve and collaborate on this project the Agile Scrum way. Thank you Chingu !
